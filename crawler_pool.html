@@ -107,9 +107,11 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 </div>
 
 <div class="tabs">
-  <div class="tab active" data-tab="pending" onclick="switchTab('pending')">🔥 待跟進<span class="badge" id="badgePending">0</span></div>
+  <div class="tab active" data-tab="queued" onclick="switchTab('queued')">🎯 待留言<span class="badge" id="badgeQueued">0</span></div>
+  <div class="tab" data-tab="pending" onclick="switchTab('pending')">🔥 待跟進<span class="badge" id="badgePending">0</span></div>
   <div class="tab" data-tab="contacted" onclick="switchTab('contacted')">📞 已聯繫<span class="badge" id="badgeContacted">0</span></div>
   <div class="tab" data-tab="closed" onclick="switchTab('closed')">🎯 已成交<span class="badge" id="badgeClosed">0</span></div>
+  <div class="tab" data-tab="failed" onclick="switchTab('failed')">❌ 失敗<span class="badge" id="badgeFailed">0</span></div>
   <div class="tab" data-tab="ignored" onclick="switchTab('ignored')">🗑️ 已忽略<span class="badge" id="badgeIgnored">0</span></div>
   <div class="tab" data-tab="all" onclick="switchTab('all')">📋 全部<span class="badge" id="badgeAll">0</span></div>
 </div>
@@ -126,6 +128,15 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     <input class="search" id="searchInp" placeholder="🔍 搜尋關鍵字 / 平台 / 貼文..." oninput="renderHits()">
     <button class="btn primary" onclick="loadHits()">🔄 立刻刷新</button>
     <button class="btn dark" onclick="openSettings()">⚙️ 設定 Key</button>
+  </div>
+
+  <div id="batchPanel" style="background:linear-gradient(135deg,#ef4444,#f97316);color:white;padding:18px 22px;border-radius:14px;margin-bottom:20px;display:none;align-items:center;gap:16px;box-shadow:0 4px 12px rgba(239,68,68,0.25);">
+    <span style="font-size:40px;">🚀</span>
+    <div style="flex:1;">
+      <div style="font-size:16px;font-weight:800;">批次留言池</div>
+      <div style="font-size:13px;opacity:0.95;margin-top:2px;" id="batchInfo">— 個目標待留言</div>
+    </div>
+    <button onclick="triggerBatch()" style="background:white;color:#ef4444;border:none;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;">🎯 開始批次留言</button>
   </div>
 
   <div id="cards" class="cards"></div>
@@ -190,20 +201,54 @@ async function loadHits() {
 function updateStats() {
   const today = new Date().toISOString().slice(0, 10);
   const todayCount = HITS.filter(h => h.created_at.startsWith(today)).length;
+  const queued = HITS.filter(h => h.status === 'queued').length;
   const pending = HITS.filter(h => h.status === 'pending').length;
   const contacted = HITS.filter(h => h.status === 'contacted').length;
   const closed = HITS.filter(h => h.status === 'closed').length;
+  const failed = HITS.filter(h => h.status === 'failed').length;
   const ignored = HITS.filter(h => h.status === 'ignored').length;
 
   document.getElementById('statToday').textContent = todayCount;
   document.getElementById('statPending').textContent = pending;
   document.getElementById('statContacted').textContent = contacted;
   document.getElementById('statClosed').textContent = closed;
+  document.getElementById('badgeQueued').textContent = queued;
   document.getElementById('badgePending').textContent = pending;
   document.getElementById('badgeContacted').textContent = contacted;
   document.getElementById('badgeClosed').textContent = closed;
+  document.getElementById('badgeFailed').textContent = failed;
   document.getElementById('badgeIgnored').textContent = ignored;
   document.getElementById('badgeAll').textContent = HITS.length;
+
+  // 批次留言面板
+  const panel = document.getElementById('batchPanel');
+  if (queued > 0) {
+    panel.style.display = 'flex';
+    document.getElementById('batchInfo').textContent = `${queued} 個目標待留言 ‧ 預計 ~${Math.ceil(queued * 60 / 60)} 分鐘完成`;
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+async function triggerBatch() {
+  if (!confirm('開始批次留言？\n\n桌機 Worker 會一一執行（間隔 30-90 秒），進度推 LINE 群組')) return;
+  const s = getS();
+  if (!s.tgToken || !s.tgChat) {
+    alert('需要 Telegram Token + Chat ID 才能下指令\n請到 PWA 設定貼齊');
+    return;
+  }
+  try {
+    await fetch(`${s.supabaseUrl}/rest/v1/command_logs`, {
+      method: 'POST',
+      headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ command_type: 'reply_now', command_data: {}, source: 'crawler_pool' }),
+    });
+    await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: s.tgChat, text: '🎯 [指令] reply_now' }),
+    });
+    toast('🚀 已下指令，桌機背景執行中...');
+  } catch (e) { toast('❌ ' + e.message, true); }
 }
 
 function renderHits() {
