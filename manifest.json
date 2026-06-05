@@ -1,0 +1,22 @@
+{
+  "name": "LAYSHOW Personal OS",
+  "short_name": "LAYSHOW OS",
+  "description": "LAYSHOW 雷修一人公司作業系統",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0c2340",
+  "theme_color": "#0c2340",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
