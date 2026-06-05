@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0c2340">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LAYSHOW OS">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>LAYSHOW Personal OS</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #F37021;
+  --dark: #0c2340;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+body {
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overscroll-behavior-y: none;
+}
+.app { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--dark), #1a4a8a);
+  color: white;
+  padding: 20px 16px;
+  border-radius: 20px;
+  margin: -16px -16px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--primary); opacity: 0.2;
+}
+.header h1 { font-size: 22px; font-weight: 800; }
+.header .greet { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.header .stats { display: flex; gap: 12px; margin-top: 16px; }
+.stat { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 10px 14px; border-radius: 12px; flex: 1; }
+.stat .label { font-size: 11px; opacity: 0.8; }
+.stat .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+
+/* Quick Actions Grid */
+.section-title { font-size: 14px; font-weight: 700; color: var(--text-muted); margin: 24px 0 12px; padding-left: 4px; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.action {
+  background: var(--card);
+  border: 2px solid var(--border);
+  padding: 18px 14px;
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  text-decoration: none;
+  color: var(--text);
+}
+.action:active { transform: scale(0.95); background: #f1f5f9; }
+.action .emoji { font-size: 28px; display: block; margin-bottom: 8px; }
+.action .name { font-size: 13px; font-weight: 600; }
+.action.primary { background: linear-gradient(135deg, var(--primary), #e11d48); color: white; border: none; }
+.action.dark { background: var(--dark); color: white; border: none; }
+.badge { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; min-width: 20px; height: 20px; border-radius: 10px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+
+/* Card */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.card-row { display: flex; align-items: center; gap: 12px; }
+.card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.card-title { font-size: 14px; font-weight: 600; }
+.card-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.card-time { font-size: 11px; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+
+/* Tabs / Bottom Nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0;
+  z-index: 100;
+}
+.nav-item {
+  flex: 1; text-align: center;
+  padding: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.nav-item.active { color: var(--primary); }
+.nav-item .icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+/* Page */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.2s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+.form-input, .form-textarea {
+  width: 100%; padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  background: white;
+}
+.form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.btn {
+  width: 100%; padding: 14px;
+  background: var(--primary); color: white;
+  border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn:active { opacity: 0.85; }
+.btn.secondary { background: var(--border); color: var(--text); }
+.btn.dark { background: var(--dark); color: white; }
+
+/* Voice */
+.voice-btn {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-size: 36px;
+  margin: 24px auto;
+  display: block;
+  box-shadow: 0 8px 20px rgba(243,112,33,0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.voice-btn.recording { background: var(--danger); animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--dark); color: white;
+  padding: 12px 24px; border-radius: 24px;
+  font-size: 13px;
+  z-index: 200;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+
+/* Empty state */
+.empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty .emoji { font-size: 48px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>👋 嗨，逸霆</h1>
+    <p class="greet" id="greet">早安，今天是個好日子</p>
+    <div class="stats">
+      <div class="stat"><div class="label">今日待辦</div><div class="value" id="statTodo">0</div></div>
+      <div class="stat"><div class="label">待回客戶</div><div class="value" id="statClient">0</div></div>
+      <div class="stat"><div class="label">未付款</div><div class="value" id="statUnpaid">0</div></div>
+    </div>
+  </div>
+
+  <!-- 首頁 -->
+  <div class="page active" id="page-home">
+    <div class="section-title">⚡ 快速操作</div>
+    <div class="grid">
+      <div class="action primary" onclick="showPage('quote')">
+        <span class="emoji">💰</span>
+        <div class="name">快速報價</div>
+      </div>
+      <div class="action dark" onclick="showPage('customer')">
+        <span class="emoji">👤</span>
+        <div class="name">新增客戶</div>
+      </div>
+      <div class="action" onclick="capturePhoto()">
+        <span class="emoji">📸</span>
+        <div class="name">拍工程照</div>
+      </div>
+      <div class="action" onclick="showPage('voice')">
+        <span class="emoji">🎙️</span>
+        <div class="name">語音記錄</div>
+      </div>
+    </div>
+
+    <div class="section-title">📅 今日行程</div>
+    <div id="todayList">
+      <div class="empty">
+        <div class="emoji">📭</div>
+        <p>今日無安排</p>
+      </div>
+    </div>
+
+    <div class="section-title">🔧 工具</div>
+    <div class="grid grid-3">
+      <a class="action" href="https://layshowadmin.lovable.app/admin/dispatch-board" target="_blank">
+        <span class="emoji">📋</span>
+        <div class="name">工單</div>
+      </a>
+      <a class="action" href="https://layshowadmin.lovable.app/admin/b2b-pipeline" target="_blank">
+        <span class="emoji">🏢</span>
+        <div class="name">B2B</div>
+      </a>
+      <a class="action" href="https://layshowadmin.lovable.app/admin/dashboard-kiosk" target="_blank">
+        <span class="emoji">📊</span>
+        <div class="name">儀表板</div>
+      </a>
+      <a class="action" href="https://t.me/layshow888" target="_blank">
+        <span class="emoji">📨</span>
+        <div class="name">Telegram</div>
+      </a>
+      <a class="action" href="https://layshowadmin.lovable.app/sales-toolkit" target="_blank">
+        <span class="emoji">💼</span>
+        <div class="name">業務包</div>
+      </a>
+      <a class="action" href="AI_指令中心.html" target="_blank">
+        <span class="emoji">🤖</span>
+        <div class="name">3 AI</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 快速報價 -->
+  <div class="page" id="page-quote">
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">💰 快速報價</h2>
+      <div class="form-group">
+        <label class="form-label">客戶姓名</label>
+        <input type="text" class="form-input" id="qName" placeholder="例如：陳先生">
+      </div>
+      <div class="form-group">
+        <label class="form-label">電話</label>
+        <input type="tel" class="form-input" id="qPhone" placeholder="0912xxx345">
+      </div>
+      <div class="form-group">
+        <label class="form-label">服務類別</label>
+        <select class="form-input" id="qCategory">
+          <option>水電工程</option>
+          <option>冷氣空調</option>
+          <option>水管疏通</option>
+          <option>家電維修</option>
+          <option>油漆粉刷</option>
+          <option>木工裝潢</option>
+          <option>裝潢統包</option>
+          <option>清潔服務</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">問題描述</label>
+        <textarea class="form-textarea" id="qDesc" placeholder="客戶描述的問題..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">估價金額（NT$）</label>
+        <input type="number" class="form-input" id="qPrice" placeholder="3000">
+      </div>
+      <button class="btn" onclick="generateQuote()">📄 產生報價單</button>
+      <button class="btn secondary" onclick="showPage('home')">取消</button>
+    </div>
+  </div>
+
+  <!-- 新增客戶 -->
+  <div class="page" id="page-customer">
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">👤 新增客戶</h2>
+      <div class="form-group">
+        <label class="form-label">姓名</label>
+        <input type="text" class="form-input" id="cName" placeholder="客戶姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">電話</label>
+        <input type="tel" class="form-input" id="cPhone" placeholder="0912xxx345">
+      </div>
+      <div class="form-group">
+        <label class="form-label">地址</label>
+        <input type="text" class="form-input" id="cAddr" placeholder="台中市西屯區...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">急迫度</label>
+        <select class="form-input" id="cUrgent">
+          <option value="normal">一般</option>
+          <option value="urgent">緊急</option>
+          <option value="high">高優先</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">需求說明</label>
+        <textarea class="form-textarea" id="cNote" placeholder="客戶描述的問題、上門時間偏好等..."></textarea>
+      </div>
+      <button class="btn" onclick="saveCustomer()">💾 儲存客戶</button>
+      <button class="btn secondary" onclick="showPage('home')">取消</button>
+    </div>
+  </div>
+
+  <!-- 語音記錄 -->
+  <div class="page" id="page-voice">
+    <div class="card" style="text-align: center;">
+      <h2 style="margin-bottom: 16px;">🎙️ 語音記錄</h2>
+      <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 13px;">按下按鈕說話，自動轉文字</p>
+      <button id="voiceBtn" class="voice-btn" onclick="toggleVoice()">🎤</button>
+      <div id="voiceStatus" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">點擊開始錄音</div>
+      <textarea class="form-textarea" id="voiceText" placeholder="說出的話會出現在這..." style="min-height: 150px;"></textarea>
+      <button class="btn" onclick="sendToTelegram()">📨 傳送到 Telegram</button>
+      <button class="btn secondary" onclick="showPage('home')">回首頁</button>
+    </div>
+  </div>
+
+  <!-- 行事曆 -->
+  <div class="page" id="page-calendar">
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">📅 行事曆</h2>
+      <button class="btn dark" onclick="openCalendar()">📅 開 Google Calendar</button>
+      <button class="btn secondary" onclick="showPage('home')" style="margin-top: 8px;">回首頁</button>
+    </div>
+  </div>
+
+  <!-- 設定 -->
+  <div class="page" id="page-settings">
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">⚙️ 設定</h2>
+      <div class="form-group">
+        <label class="form-label">Supabase URL</label>
+        <input type="text" class="form-input" id="sUrl" placeholder="https://xxx.supabase.co">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supabase Anon Key</label>
+        <input type="text" class="form-input" id="sKey" placeholder="eyJ...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telegram Bot Token</label>
+        <input type="text" class="form-input" id="tgToken" placeholder="bot 的 token">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telegram Chat ID</label>
+        <input type="text" class="form-input" id="tgChat" placeholder="@layshow888">
+      </div>
+      <button class="btn" onclick="saveSettings()">💾 儲存</button>
+      <button class="btn secondary" onclick="showPage('home')">回首頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <a class="nav-item active" data-page="home" onclick="showPage('home')">
+    <span class="icon">🏠</span>首頁
+  </a>
+  <a class="nav-item" data-page="quote" onclick="showPage('quote')">
+    <span class="icon">💰</span>報價
+  </a>
+  <a class="nav-item" data-page="customer" onclick="showPage('customer')">
+    <span class="icon">👥</span>客戶
+  </a>
+  <a class="nav-item" data-page="calendar" onclick="showPage('calendar')">
+    <span class="icon">📅</span>行程
+  </a>
+  <a class="nav-item" data-page="settings" onclick="showPage('settings')">
+    <span class="icon">⚙️</span>設定
+  </a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ 設定管理 ============
+const SETTINGS_KEY = 'layshow_personal_os_settings';
+function loadSettings() {
+  const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+  document.getElementById('sUrl').value = s.supabaseUrl || 'https://ujaogedhwcbyczzpgzpy.supabase.co';
+  document.getElementById('sKey').value = s.supabaseKey || '';
+  document.getElementById('tgToken').value = s.tgToken || '8585783388:AAFldD2N1ASet7AzpJ-FJbl1Psj8hdMIcOQ';
+  document.getElementById('tgChat').value = s.tgChat || '@layshow888';
+  return s;
+}
+function saveSettings() {
+  const s = {
+    supabaseUrl: document.getElementById('sUrl').value,
+    supabaseKey: document.getElementById('sKey').value,
+    tgToken: document.getElementById('tgToken').value,
+    tgChat: document.getElementById('tgChat').value,
+  };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  toast('✅ 設定已儲存');
+}
+
+// ============ 頁面切換 ============
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === name);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============ Toast ============
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============ 報價單 ============
+function generateQuote() {
+  const name = document.getElementById('qName').value;
+  const phone = document.getElementById('qPhone').value;
+  const cat = document.getElementById('qCategory').value;
+  const desc = document.getElementById('qDesc').value;
+  const price = document.getElementById('qPrice').value;
+  if (!name || !price) { toast('⚠️ 請填客戶姓名和金額'); return; }
+  const quoteId = 'LS-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*1000).toString().padStart(3,'0');
+  const text = `📋 LAYSHOW 雷修 - 報價單
+═══════════════════════
+編號：${quoteId}
+日期：${new Date().toLocaleDateString('zh-TW')}
+有效期：3 天
+
+👤 客戶：${name}
+📞 電話：${phone}
+🔧 服務：${cat}
+
+📝 問題說明：
+${desc}
+
+💰 報價金額：NT$ ${parseInt(price).toLocaleString()}
+
+✓ 師傅實名制
+✓ 透明報價無隱藏費
+✓ 完工 30 天保修
+✓ 7 天爭議協調
+
+📞 確認專線：0970-898-950`;
+  if (navigator.share) {
+    navigator.share({ title: 'LAYSHOW 報價單', text: text });
+  } else {
+    navigator.clipboard.writeText(text);
+    toast('✅ 報價單已複製，可貼到 LINE');
+  }
+  sendToTelegramMessage('📋 新報價單\n' + text);
+}
+
+// ============ 客戶儲存 ============
+async function saveCustomer() {
+  const data = {
+    name: document.getElementById('cName').value,
+    phone: document.getElementById('cPhone').value,
+    address: document.getElementById('cAddr').value,
+    urgent: document.getElementById('cUrgent').value,
+    note: document.getElementById('cNote').value,
+    timestamp: new Date().toISOString(),
+  };
+  if (!data.name || !data.phone) { toast('⚠️ 請填姓名和電話'); return; }
+  // 存到 localStorage（暫時，未來改 Supabase）
+  const list = JSON.parse(localStorage.getItem('customers') || '[]');
+  list.push(data);
+  localStorage.setItem('customers', JSON.stringify(list));
+  // 同時推 Telegram
+  await sendToTelegramMessage(`👤 新客戶\n姓名：${data.name}\n電話：${data.phone}\n地址：${data.address}\n急迫度：${data.urgent}\n說明：${data.note}`);
+  toast('✅ 客戶已新增');
+  document.getElementById('cName').value = '';
+  document.getElementById('cPhone').value = '';
+  document.getElementById('cAddr').value = '';
+  document.getElementById('cNote').value = '';
+  showPage('home');
+  updateStats();
+}
+
+// ============ 語音 ============
+let recognition = null;
+let isRecording = false;
+function toggleVoice() {
+  if (!recognition) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast('⚠️ 此瀏覽器不支援語音');
+      return;
+    }
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRec();
+    recognition.lang = 'zh-TW';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onresult = (e) => {
+      let text = '';
+      for (let i = 0; i < e.results.length; i++) {
+        text += e.results[i][0].transcript;
+      }
+      document.getElementById('voiceText').value = text;
+    };
+    recognition.onend = () => {
+      isRecording = false;
+      document.getElementById('voiceBtn').classList.remove('recording');
+      document.getElementById('voiceStatus').textContent = '點擊重新錄音';
+    };
+  }
+  if (isRecording) {
+    recognition.stop();
+  } else {
+    document.getElementById('voiceText').value = '';
+    recognition.start();
+    isRecording = true;
+    document.getElementById('voiceBtn').classList.add('recording');
+    document.getElementById('voiceStatus').textContent = '🔴 錄音中...再次點擊停止';
+  }
+}
+
+// ============ Telegram ============
+async function sendToTelegramMessage(msg) {
+  const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+  if (!s.tgToken || !s.tgChat) { toast('⚠️ 請先設定 Telegram'); return; }
+  try {
+    const url = `https://api.telegram.org/bot${s.tgToken}/sendMessage`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: s.tgChat, text: msg }),
+    });
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+async function sendToTelegram() {
+  const text = document.getElementById('voiceText').value.trim();
+  if (!text) { toast('⚠️ 無內容'); return; }
+  const ok = await sendToTelegramMessage('🎙️ 語音記錄\n' + text);
+  toast(ok ? '✅ 已送 Telegram' : '⚠️ 送出失敗');
+}
+
+// ============ 拍照 ============
+function capturePhoto() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    if (!s.tgToken || !s.tgChat) { toast('⚠️ 請先設定 Telegram'); return; }
+    const fd = new FormData();
+    fd.append('chat_id', s.tgChat);
+    fd.append('photo', file);
+    fd.append('caption', '📸 工程照（' + new Date().toLocaleString('zh-TW') + '）');
+    try {
+      await fetch(`https://api.telegram.org/bot${s.tgToken}/sendPhoto`, { method: 'POST', body: fd });
+      toast('✅ 照片已傳');
+    } catch (e) { toast('⚠️ 上傳失敗'); }
+  };
+  input.click();
+}
+
+// ============ Google Calendar ============
+function openCalendar() {
+  window.open('https://calendar.google.com/calendar/u/0/r', '_blank');
+}
+
+// ============ 問候語 ============
+function updateGreet() {
+  const h = new Date().getHours();
+  let g = '早安';
+  if (h >= 12 && h < 18) g = '午安';
+  else if (h >= 18) g = '晚安';
+  const wkd = ['日','一','二','三','四','五','六'][new Date().getDay()];
+  document.getElementById('greet').textContent = `${g}，今天是 ${new Date().getMonth()+1}/${new Date().getDate()} (週${wkd})`;
+}
+
+// ============ 統計 ============
+function updateStats() {
+  const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+  const today = new Date().toISOString().slice(0,10);
+  const todayCustomers = customers.filter(c => c.timestamp.startsWith(today));
+  document.getElementById('statTodo').textContent = todayCustomers.filter(c => c.urgent === 'urgent').length;
+  document.getElementById('statClient').textContent = todayCustomers.length;
+  document.getElementById('statUnpaid').textContent = '0';
+}
+
+// ============ 初始化 ============
+loadSettings();
+updateGreet();
+updateStats();
+
+// PWA 註冊 Service Worker（離線可用）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(e => console.log('SW fail', e));
+}
+</script>
+
+</body>
+</html>
