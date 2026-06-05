@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0c2340">
+<title>台中水電維修行情測算機 ｜ LAYSHOW 雷修</title>
+<meta name="description" content="冷氣不冷、水管漏水、家電故障維修費用多少？輸入問題立即 AI 估價，避免被亂報價。台中專業家修平台 LAYSHOW 雷修提供。">
+<meta name="keywords" content="台中水電維修, 冷氣維修費用, 水管漏水價格, 維修報價, 家修估價">
+<meta property="og:title" content="台中水電維修行情測算機 - 1 分鐘 AI 估價">
+<meta property="og:description" content="輸入問題，AI 立即告訴你合理價格區間，避免被亂報價。">
+<meta property="og:type" content="website">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #F37021; --dark: #0c2340; --bg: #f8fafc; --card: #fff;
+  --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+  --success: #10b981; --warning: #f59e0b; --cyan: #00d4ff;
+}
+body {
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--dark) 0%, #1a4a8a 100%);
+  color: white; padding: 32px 20px 80px; text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px;
+  background: var(--primary); border-radius: 50%; opacity: 0.15;
+}
+.hero::after {
+  content: ''; position: absolute; bottom: -80px; left: -80px; width: 240px; height: 240px;
+  background: var(--cyan); border-radius: 50%; opacity: 0.1;
+}
+.hero h1 { font-size: 28px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px; }
+.hero .badge { display: inline-block; background: rgba(243,112,33,0.2); color: #FFB180; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: 600; margin-bottom: 12px; }
+.hero p { font-size: 14px; opacity: 0.85; max-width: 480px; margin: 0 auto; }
+
+.container { max-width: 600px; margin: -40px auto 0; padding: 0 16px 60px; position: relative; z-index: 10; }
+
+.card { background: var(--card); border-radius: 20px; padding: 24px 20px; box-shadow: 0 8px 24px rgba(12,35,64,0.08); margin-bottom: 16px; }
+
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--primary); color: white; border-radius: 14px; font-size: 13px; font-weight: 800; margin-right: 8px; }
+.step-title { font-size: 17px; font-weight: 800; color: var(--dark); margin-bottom: 14px; display: flex; align-items: center; }
+
+.category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.category {
+  padding: 16px 12px; border: 2px solid var(--border); border-radius: 14px;
+  text-align: center; cursor: pointer; transition: all 0.15s; background: white;
+}
+.category:active { transform: scale(0.97); }
+.category.active { border-color: var(--primary); background: #fff7ed; }
+.category .emoji { font-size: 32px; display: block; margin-bottom: 6px; }
+.category .name { font-size: 13px; font-weight: 700; color: var(--dark); }
+.category .hint { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.form-input, .form-textarea {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 12px;
+  font-size: 15px; background: white; font-family: inherit;
+}
+.form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary), #e11d48); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 12px; box-shadow: 0 4px 12px rgba(243,112,33,0.3); }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn.secondary { background: white; color: var(--dark); border: 2px solid var(--border); box-shadow: none; }
+
+.result {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fff7ed 100%); border: 2px solid var(--primary);
+  border-radius: 16px; padding: 20px; margin-top: 16px; display: none;
+}
+.result.show { display: block; animation: slideUp 0.4s; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.price-range { text-align: center; padding: 16px 0; border-bottom: 1px dashed var(--border); margin-bottom: 12px; }
+.price-range .label { font-size: 11px; color: var(--muted); font-weight: 600; }
+.price-range .value { font-size: 28px; font-weight: 900; color: var(--dark); margin: 4px 0; }
+.price-range .sub { font-size: 12px; color: var(--muted); }
+.factors h4 { font-size: 13px; color: var(--dark); margin-bottom: 8px; font-weight: 700; }
+.factor { padding: 8px 12px; background: white; border-radius: 8px; margin-bottom: 6px; font-size: 12px; line-height: 1.5; color: var(--text); border-left: 3px solid var(--cyan); }
+
+.cta {
+  background: var(--dark); color: white; padding: 20px; border-radius: 16px; margin-top: 16px; text-align: center;
+}
+.cta h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.cta p { font-size: 13px; opacity: 0.85; margin-bottom: 14px; }
+.cta-btn { display: inline-block; background: var(--primary); color: white; padding: 12px 24px; border-radius: 24px; font-weight: 700; font-size: 14px; text-decoration: none; margin: 4px; }
+.cta-btn:active { opacity: 0.85; }
+.cta-btn.line { background: #06C755; }
+
+.share { background: var(--dark); padding: 16px; border-radius: 12px; color: white; margin-top: 16px; }
+.share .label { font-size: 12px; opacity: 0.7; margin-bottom: 8px; }
+.share-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.share-btn { padding: 8px 4px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; text-align: center; cursor: pointer; font-size: 12px; }
+
+.benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.benefit { background: white; padding: 12px 8px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
+.benefit .icon { font-size: 22px; margin-bottom: 4px; }
+.benefit .text { font-size: 11px; color: var(--dark); font-weight: 600; line-height: 1.3; }
+
+.footer { text-align: center; padding: 20px 16px; color: var(--muted); font-size: 11px; }
+.footer .logo { color: var(--dark); font-weight: 800; margin-right: 6px; }
+.footer a { color: var(--primary); text-decoration: none; }
+
+.loading { display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">⚡ AI 智能估價 ‧ 1 分鐘出價</div>
+  <h1>水電維修行情測算機</h1>
+  <p>輸入您的問題，AI 立即告訴您合理價格區間<br>避免被亂報價、報修前心裡有底</p>
+</div>
+
+<div class="container">
+
+  <div class="benefits">
+    <div class="benefit"><div class="icon">⚡</div><div class="text">30 秒 AI 估價</div></div>
+    <div class="benefit"><div class="icon">💰</div><div class="text">透明價格</div></div>
+    <div class="benefit"><div class="icon">🛡️</div><div class="text">7 日保障</div></div>
+  </div>
+
+  <div class="card">
+    <div class="step-title"><span class="step-num">1</span>選擇問題類型</div>
+    <div class="category-grid" id="categories">
+      <div class="category" data-cat="冷氣維修" onclick="selectCat(this)"><span class="emoji">❄️</span><div class="name">冷氣維修</div><div class="hint">不冷/異音/滴水</div></div>
+      <div class="category" data-cat="水管漏水" onclick="selectCat(this)"><span class="emoji">💧</span><div class="name">水管漏水</div><div class="hint">廚房/浴室/抓漏</div></div>
+      <div class="category" data-cat="通水管" onclick="selectCat(this)"><span class="emoji">🚿</span><div class="name">通水管</div><div class="hint">堵塞/排水慢</div></div>
+      <div class="category" data-cat="電路維修" onclick="selectCat(this)"><span class="emoji">⚡</span><div class="name">電路維修</div><div class="hint">跳電/插座/燈具</div></div>
+      <div class="category" data-cat="熱水器" onclick="selectCat(this)"><span class="emoji">🔥</span><div class="name">熱水器</div><div class="hint">不熱/異音/換新</div></div>
+      <div class="category" data-cat="家電維修" onclick="selectCat(this)"><span class="emoji">📺</span><div class="name">家電維修</div><div class="hint">洗衣機/冰箱</div></div>
+      <div class="category" data-cat="壁癌處理" onclick="selectCat(this)"><span class="emoji">🏠</span><div class="name">壁癌處理</div><div class="hint">天花板/牆面</div></div>
+      <div class="category" data-cat="其他修繕" onclick="selectCat(this)"><span class="emoji">🔧</span><div class="name">其他修繕</div><div class="hint">門窗/系統櫃</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="step-title"><span class="step-num">2</span>描述您的狀況</div>
+    <textarea class="form-textarea" id="desc" placeholder="例如：我家冷氣開很久還是不冷，吹出來的風不夠涼，已經 5 年沒清洗了"></textarea>
+
+    <div style="margin-top: 12px;">
+      <label style="font-size: 12px; color: var(--muted); margin-right: 8px;">📍 所在地區：</label>
+      <select class="form-input" id="city" style="display: inline-block; width: 60%; padding: 8px;">
+        <option>台中市</option><option>桃園市</option><option>新北市</option><option>台北市</option>
+        <option>新竹</option><option>彰化</option><option>苗栗</option><option>南投</option>
+        <option>雲林</option><option>嘉義</option><option>台南</option><option>高雄</option><option>其他</option>
+      </select>
+    </div>
+
+    <button class="btn" id="estimateBtn" onclick="estimate()">🤖 AI 立即估價</button>
+  </div>
+
+  <div class="result" id="result">
+    <div class="price-range">
+      <div class="label">預估費用區間</div>
+      <div class="value" id="priceText">NT$ - ~ -</div>
+      <div class="sub" id="priceSub">基於 LAYSHOW AI + 台中市場行情</div>
+    </div>
+    <div class="factors">
+      <h4>💡 影響價格的因素</h4>
+      <div id="factorsList"></div>
+    </div>
+  </div>
+
+  <div class="cta" id="cta" style="display: none;">
+    <h3>💚 想找師傅進一步報價？</h3>
+    <p>LAYSHOW 雷修台中專業家修平台<br>實名制師傅 ‧ 7 日爭議保障 ‧ 免費諮詢</p>
+    <a class="cta-btn line" href="https://line.me/R/ti/p/@layshow" target="_blank">💬 加 LINE 詢問</a>
+    <a class="cta-btn" href="https://layshow.com.tw" target="_blank">🌐 上官網</a>
+  </div>
+
+  <div class="share" id="share" style="display: none;">
+    <div class="label">📤 分享給有需要的朋友：</div>
+    <div class="share-grid">
+      <div class="share-btn" onclick="shareLINE()">💬 LINE</div>
+      <div class="share-btn" onclick="shareFB()">📘 FB</div>
+      <div class="share-btn" onclick="copyLink()">🔗 連結</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><span class="logo">LAYSHOW 雷修</span> ‧ 智能修繕生態系</p>
+    <p style="margin-top: 4px;">鈺欣霆實業有限公司 ‧ 統編 83107252</p>
+    <p style="margin-top: 4px;"><a href="https://layshow.com.tw">layshow.com.tw</a></p>
+  </div>
+</div>
+
+<script>
+let selectedCat = null;
+
+function selectCat(el) {
+  document.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedCat = el.dataset.cat;
+}
+
+// 基礎價格區間（基於 Gemini 競品報告 + 台中市場）
+const BASE_PRICES = {
+  '冷氣維修': { range: [1500, 8000], factors: ['冷媒種類（R32/R410A 不同）', '是否需查漏 + 抽真空', '機型 + 樓層 + 高空作業', '是否含基本檢測費 800-1500'] },
+  '水管漏水': { range: [3000, 15000], factors: ['漏水位置（明管/暗管 影響大）', '是否需打牆（破壞性工程）', '是否含抓漏儀器費 800-1500', '材料費 + 工資分開計算'] },
+  '通水管': { range: [1500, 4500], factors: ['堵塞程度（軟堵/硬堵）', '是否需高壓水車', '管線長度 + 樓層', '保證疏通 vs 嘗試處理價差大'] },
+  '電路維修': { range: [800, 6000], factors: ['檢測費通常 800-1500', '插座 / 燈具更換 600-1500/個', '配線抽換 4500-15000', '材料規格（一般 vs 防潮）'] },
+  '熱水器': { range: [1500, 8000], factors: ['換零件 vs 換新機', '電熱 vs 瓦斯 不同價', '基本檢測 800-1500', '安裝費含拆舊機 1500'] },
+  '家電維修': { range: [1500, 6000], factors: ['機型 + 廠牌（保固期內？）', '原廠零件 vs 副廠', '基本檢測 800-1500', '到府工本費 + 維修費'] },
+  '壁癌處理': { range: [3000, 30000], factors: ['面積 + 樓層', '是否需找漏水源', '油漆批土材料費', '工程天數（3-7 天）'] },
+  '其他修繕': { range: [800, 5000], factors: ['依項目報價', '材料費需另計', '工時計算基準', '建議先諮詢'] },
+};
+
+function estimate() {
+  if (!selectedCat) {
+    alert('請先選擇問題類型');
+    return;
+  }
+  const desc = document.getElementById('desc').value.trim();
+  const city = document.getElementById('city').value;
+
+  const btn = document.getElementById('estimateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span> AI 估價中...';
+
+  setTimeout(() => {
+    const base = BASE_PRICES[selectedCat];
+    let [low, high] = base.range;
+
+    // 描述含關鍵字時調整
+    if (desc) {
+      if (/嚴重|大|多年|常常|一直/.test(desc)) { high = Math.round(high * 1.2); }
+      if (/簡單|小|偶爾/.test(desc)) { low = Math.max(low - 500, 500); }
+      if (/換新|更換/.test(desc)) { high = Math.round(high * 1.3); }
+      if (/抓漏|查漏/.test(desc)) { low += 800; }
+    }
+
+    // 城市調整（台北略高，其他平均）
+    if (city === '台北市') { low = Math.round(low * 1.1); high = Math.round(high * 1.15); }
+    else if (city === '高雄') { low = Math.round(low * 0.95); }
+
+    document.getElementById('priceText').textContent = `NT$ ${low.toLocaleString()} ~ ${high.toLocaleString()}`;
+    document.getElementById('priceSub').textContent = `${city} ‧ ${selectedCat} ‧ 基於 LAYSHOW AI + 在地市場行情`;
+
+    const factorsList = document.getElementById('factorsList');
+    factorsList.innerHTML = base.factors.map(f => `<div class="factor">${f}</div>`).join('');
+
+    document.getElementById('result').classList.add('show');
+    document.getElementById('cta').style.display = 'block';
+    document.getElementById('share').style.display = 'block';
+
+    btn.disabled = false;
+    btn.textContent = '🔄 重新估價';
+
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 1200);
+}
+
+function shareLINE() {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent('我用 LAYSHOW 估了水電維修價格，超方便！');
+  window.open(`https://line.me/R/msg/text/?${text}%0A${url}`);
+}
+function shareFB() {
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`);
+}
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    alert('連結已複製，貼給朋友吧 📋');
+  });
+}
+</script>
+</body>
+</html>
