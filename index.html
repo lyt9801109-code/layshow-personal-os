@@ -118,6 +118,16 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <div class="action purple" onclick="showPage('voice')"><span class="emoji">🎙️</span><div class="name">語音記錄</div></div>
     </div>
 
+    <div class="section-title">🎯 爬蟲待留言</div>
+    <div onclick="triggerBatchReply()" id="batchReplyBtn" style="background:linear-gradient(135deg,#ef4444,#f97316);color:white;padding:18px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+      <span style="font-size:36px;">🚀</span>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;">開始批次留言</div>
+        <div style="font-size:12px;opacity:0.9;" id="queuedCount">載入中...</div>
+      </div>
+      <span style="font-size:24px;">→</span>
+    </div>
+
     <div class="section-title">🧠 AI 助理</div>
     <div class="grid">
       <div class="action blue" onclick="showPage('ai_ask')"><span class="emoji">💬</span><div class="name">問 Claude</div></div>
@@ -909,6 +919,41 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString('zh-TW');
 }
 
+// ========= 批次留言 =========
+async function refreshQueuedCount() {
+  const s = getS();
+  if (!s.supabaseKey) {
+    document.getElementById('queuedCount').textContent = '請先到設定貼 Supabase Key';
+    return;
+  }
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/crawler_hits?status=eq.queued&select=count`,
+      { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Prefer': 'count=exact' } });
+    const cnt = (r.headers.get('content-range') || '0').split('/').pop();
+    const n = parseInt(cnt) || 0;
+    const el = document.getElementById('queuedCount');
+    const btn = document.getElementById('batchReplyBtn');
+    if (n === 0) {
+      el.textContent = '目前無待留言（爬蟲尚未抓到）';
+      btn.style.opacity = '0.5';
+    } else {
+      el.textContent = `🔥 ${n} 個目標等你下指令`;
+      btn.style.opacity = '1';
+    }
+  } catch (e) {}
+}
+
+async function triggerBatchReply() {
+  const s = getS();
+  if (!s.supabaseKey) { toast('⚠️ 先到設定貼 Supabase Key'); showPage('settings'); return; }
+  const cntTxt = document.getElementById('queuedCount').textContent;
+  if (cntTxt.includes('無待留言')) { toast('📭 沒有待留言目標'); return; }
+  if (!confirm('確定開始批次留言嗎？\n\n桌機會一一執行，隨機間隔 30-90 秒避免被偵測。\n進度會推 LINE 群組。')) return;
+  await sendCommand('reply_now', {}, '🚀 開始批次留言');
+  toast('🚀 已下指令，桌機背景執行中...');
+  setTimeout(refreshQueuedCount, 2000);
+}
+
 // ========= 統計 =========
 async function updateStats() {
   const s = getS();
@@ -946,8 +991,10 @@ setInterval(() => {
   if (document.getElementById('page-home').classList.contains('active')) {
     refreshCmdList();
     updateStats();
+    refreshQueuedCount();
   }
 }, 5000);
+refreshQueuedCount();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
