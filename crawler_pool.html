@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAYSHOW 爬蟲客戶池</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --dark: #0c2340; --orange: #F37021; --bg: #f1f5f9;
+  --card: #fff; --border: #e2e8f0; --text: #1e293b; --muted: #64748b;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #3b82f6;
+}
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.topbar { background: linear-gradient(135deg, var(--dark), #1a4a8a); color: white; padding: 16px 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+.topbar h1 { font-size: 20px; font-weight: 800; }
+.topbar .sub { font-size: 12px; opacity: 0.7; }
+.topbar .live { margin-left: auto; display: flex; align-items: center; gap: 8px; background: rgba(16,185,129,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; }
+.topbar .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.tabs { background: white; border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; position: sticky; top: 0; z-index: 50; }
+.tab { padding: 14px 20px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.15s; }
+.tab:hover { color: var(--dark); }
+.tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.tab .badge { display: inline-block; margin-left: 6px; background: var(--bg); color: var(--text); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.tab.active .badge { background: var(--orange); color: white; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.search { flex: 1; min-width: 200px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; }
+.btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--orange); color: white; }
+.btn.dark { background: var(--dark); color: white; }
+.btn.gray { background: var(--border); color: var(--text); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+
+.hit { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; transition: all 0.2s; position: relative; }
+.hit:hover { border-color: var(--orange); box-shadow: 0 4px 12px rgba(243,112,33,0.1); transform: translateY(-2px); }
+.hit.new { border-left: 4px solid var(--success); }
+.hit.urgent { border-left: 4px solid var(--danger); animation: glow 2s infinite; }
+@keyframes glow { 0%,100% { box-shadow: 0 0 0 rgba(239,68,68,0); } 50% { box-shadow: 0 0 16px rgba(239,68,68,0.3); } }
+
+.hit-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.hit-platform { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 700; }
+.hit-platform.fb { background: #e0f2fe; color: #075985; }
+.hit-platform.threads { background: #f3e8ff; color: #6b21a8; }
+.hit-platform.ptt { background: #fef3c7; color: #92400e; }
+.hit-platform.fbs { background: #d1fae5; color: #065f46; }
+.hit-time { font-size: 11px; color: var(--muted); }
+
+.hit-title { font-size: 13px; font-weight: 700; margin: 6px 0; color: var(--dark); line-height: 1.4; }
+.hit-text { font-size: 12px; color: var(--text); background: var(--bg); padding: 8px 10px; border-radius: 6px; line-height: 1.5; margin: 6px 0; max-height: 80px; overflow-y: auto; }
+.hit-keyword { font-size: 11px; color: var(--orange); font-weight: 700; margin: 4px 0; }
+.hit-keyword::before { content: "🔑 "; }
+
+.hit-comment { font-size: 11px; color: var(--muted); padding: 6px 8px; border-left: 2px solid var(--orange); background: #fff7ed; border-radius: 4px; margin: 6px 0; line-height: 1.5; max-height: 60px; overflow-y: auto; }
+
+.hit-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.act { padding: 7px 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.15s; }
+.act:hover { opacity: 0.85; }
+.act.open { background: var(--info); color: white; }
+.act.copy { background: #8b5cf6; color: white; }
+.act.contact { background: var(--success); color: white; }
+.act.close { background: var(--orange); color: white; }
+.act.ignore { background: var(--border); color: var(--text); }
+.act.full { grid-column: 1 / -1; }
+
+.hit-note { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; margin-top: 6px; resize: vertical; min-height: 30px; }
+
+.empty { text-align: center; padding: 80px 20px; color: var(--muted); }
+.empty .emo { font-size: 64px; margin-bottom: 16px; }
+.empty h2 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 200; }
+.modal.show { display: flex; }
+.modal-content { background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal h3 { margin-bottom: 12px; color: var(--dark); }
+.template { padding: 10px 12px; background: var(--bg); border-radius: 8px; margin-bottom: 10px; font-size: 13px; line-height: 1.5; cursor: pointer; border: 1px solid var(--border); }
+.template:hover { background: #fff7ed; border-color: var(--orange); }
+.template-label { font-size: 11px; color: var(--orange); font-weight: 700; margin-bottom: 4px; }
+
+.toast { position: fixed; top: 80px; right: 24px; background: var(--dark); color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 300; transform: translateX(120%); transition: transform 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.toast.show { transform: translateX(0); }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat { background: white; padding: 14px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
+.stat .label { font-size: 11px; color: var(--muted); }
+.stat .value { font-size: 24px; font-weight: 800; color: var(--dark); margin-top: 4px; }
+.stat.success .value { color: var(--success); }
+.stat.warning .value { color: var(--warning); }
+.stat.danger .value { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>🎯 LAYSHOW 爬蟲客戶池</h1>
+    <div class="sub">公司筆電 24/7 跟進中心 ‧ 每 30 秒自動刷新</div>
+  </div>
+  <div class="live"><span class="dot"></span><span id="liveTxt">即時同步</span></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="pending" onclick="switchTab('pending')">🔥 待跟進<span class="badge" id="badgePending">0</span></div>
+  <div class="tab" data-tab="contacted" onclick="switchTab('contacted')">📞 已聯繫<span class="badge" id="badgeContacted">0</span></div>
+  <div class="tab" data-tab="closed" onclick="switchTab('closed')">🎯 已成交<span class="badge" id="badgeClosed">0</span></div>
+  <div class="tab" data-tab="ignored" onclick="switchTab('ignored')">🗑️ 已忽略<span class="badge" id="badgeIgnored">0</span></div>
+  <div class="tab" data-tab="all" onclick="switchTab('all')">📋 全部<span class="badge" id="badgeAll">0</span></div>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat"><div class="label">今日命中</div><div class="value" id="statToday">0</div></div>
+    <div class="stat warning"><div class="label">待跟進</div><div class="value" id="statPending">0</div></div>
+    <div class="stat success"><div class="label">已聯繫</div><div class="value" id="statContacted">0</div></div>
+    <div class="stat danger"><div class="label">已成交</div><div class="value" id="statClosed">0</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search" id="searchInp" placeholder="🔍 搜尋關鍵字 / 平台 / 貼文..." oninput="renderHits()">
+    <button class="btn primary" onclick="loadHits()">🔄 立刻刷新</button>
+    <button class="btn dark" onclick="openSettings()">⚙️ 設定 Key</button>
+  </div>
+
+  <div id="cards" class="cards"></div>
+</div>
+
+<div class="modal" id="templateModal" onclick="if(event.target.id==='templateModal') closeTemplate()">
+  <div class="modal-content">
+    <h3>📋 私訊話術建議</h3>
+    <p style="font-size: 12px; color: #888; margin-bottom: 12px;">點任一段複製</p>
+    <div id="tplList"></div>
+    <button class="btn gray" onclick="closeTemplate()" style="margin-top: 12px; width: 100%;">關閉</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SETTINGS_KEY = 'layshow_personal_os_v3';
+const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
+let HITS = [];
+let CURRENT_TAB = 'pending';
+
+function getS() { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
+
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isErr ? 'var(--danger)' : 'var(--dark)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function switchTab(name) {
+  CURRENT_TAB = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  renderHits();
+}
+
+async function loadHits() {
+  const s = getS();
+  if (!s.supabaseKey) {
+    toast('⚠️ 請先「設定 Key」貼 Supabase Key', true);
+    return;
+  }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/crawler_hits?order=created_at.desc&limit=200`, {
+      headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` },
+    });
+    if (!r.ok) {
+      toast('❌ 連線失敗 (' + r.status + ')', true);
+      return;
+    }
+    HITS = await r.json();
+    updateStats();
+    renderHits();
+    document.getElementById('liveTxt').textContent = '已同步 ' + new Date().toLocaleTimeString('zh-TW');
+  } catch (e) {
+    toast('❌ ' + e.message, true);
+  }
+}
+
+function updateStats() {
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCount = HITS.filter(h => h.created_at.startsWith(today)).length;
+  const pending = HITS.filter(h => h.status === 'pending').length;
+  const contacted = HITS.filter(h => h.status === 'contacted').length;
+  const closed = HITS.filter(h => h.status === 'closed').length;
+  const ignored = HITS.filter(h => h.status === 'ignored').length;
+
+  document.getElementById('statToday').textContent = todayCount;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statContacted').textContent = contacted;
+  document.getElementById('statClosed').textContent = closed;
+  document.getElementById('badgePending').textContent = pending;
+  document.getElementById('badgeContacted').textContent = contacted;
+  document.getElementById('badgeClosed').textContent = closed;
+  document.getElementById('badgeIgnored').textContent = ignored;
+  document.getElementById('badgeAll').textContent = HITS.length;
+}
+
+function renderHits() {
+  const search = document.getElementById('searchInp').value.toLowerCase();
+  let filtered = CURRENT_TAB === 'all' ? HITS : HITS.filter(h => (h.status || 'pending') === CURRENT_TAB);
+  if (search) {
+    filtered = filtered.filter(h => (h.keyword + h.platform + h.post_text + h.post_title + h.comment_left).toLowerCase().includes(search));
+  }
+  const el = document.getElementById('cards');
+  if (filtered.length === 0) {
+    el.innerHTML = `<div class="empty" style="grid-column: 1/-1;">
+      <div class="emo">${CURRENT_TAB === 'pending' ? '⏳' : '📭'}</div>
+      <h2>${CURRENT_TAB === 'pending' ? '目前沒有待跟進客戶' : '此分類沒有資料'}</h2>
+      <p>爬蟲每 40 分鐘掃一次，找到客戶會自動顯示在這</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(h => renderCard(h)).join('');
+}
+
+function renderCard(h) {
+  const platformClass = { 'FB社團': 'fb', 'FB搜尋': 'fbs', 'Threads': 'threads', 'PTT': 'ptt' }[h.platform] || 'fb';
+  const ago = timeAgo(h.created_at);
+  const isNew = (Date.now() - new Date(h.created_at).getTime()) < 5*60*1000;
+  const isUrgent = isNew && h.status === 'pending';
+
+  return `<div class="hit ${isNew ? 'new' : ''} ${isUrgent ? 'urgent' : ''}" data-id="${h.id}">
+    <div class="hit-head">
+      <span class="hit-platform ${platformClass}">${h.platform || '?'}</span>
+      <span class="hit-time">${ago} ${isNew ? '🆕' : ''}</span>
+    </div>
+    ${h.post_title ? `<div class="hit-title">📝 ${escapeHtml(h.post_title.substring(0,80))}</div>` : ''}
+    ${h.post_text ? `<div class="hit-text">${escapeHtml(h.post_text.substring(0,200))}</div>` : ''}
+    <div class="hit-keyword">${escapeHtml(h.keyword || '')}</div>
+    <div class="hit-comment">💬 ${escapeHtml((h.comment_left || '').substring(0,160))}</div>
+    <div class="hit-actions">
+      <button class="act open" onclick="window.open('${h.post_url}', '_blank')">🌐 開貼文</button>
+      <button class="act copy" onclick="showTemplates('${h.id}', '${escapeAttr(h.keyword)}', '${escapeAttr(h.platform)}')">📋 私訊話術</button>
+      <button class="act contact" onclick="markStatus('${h.id}', 'contacted')">✅ 已聯繫</button>
+      <button class="act close" onclick="markStatus('${h.id}', 'closed')">🎯 已成交</button>
+      <button class="act ignore full" onclick="markStatus('${h.id}', 'ignored')">🗑️ 忽略</button>
+    </div>
+    <textarea class="hit-note" placeholder="跟進備註（自動存）" onchange="saveNote('${h.id}', this.value)">${escapeHtml(h.notes || '')}</textarea>
+  </div>`;
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function escapeAttr(s) {
+  return (s || '').replace(/['"\\]/g, '');
+}
+
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts).getTime()) / 1000;
+  if (diff < 60) return '剛剛';
+  if (diff < 3600) return Math.floor(diff/60) + ' 分前';
+  if (diff < 86400) return Math.floor(diff/3600) + ' 小時前';
+  return new Date(ts).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+async function markStatus(id, status) {
+  const s = getS();
+  const extra = status === 'contacted' ? { contacted_at: new Date().toISOString() } :
+                status === 'closed' ? { closed_at: new Date().toISOString() } : {};
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/crawler_hits?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, ...extra }),
+    });
+    if (r.ok) {
+      const labels = { contacted: '✅ 標記已聯繫', closed: '🎯 標記已成交', ignored: '🗑️ 已忽略' };
+      toast(labels[status] || '已更新');
+      loadHits();
+    } else {
+      toast('❌ 更新失敗', true);
+    }
+  } catch (e) { toast('❌ ' + e.message, true); }
+}
+
+async function saveNote(id, note) {
+  const s = getS();
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/crawler_hits?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes: note }),
+    });
+    toast('💾 備註已存');
+  } catch (e) {}
+}
+
+const TEMPLATES = [
+  { label: 'A 親切版', text: '您好！看到您在 {platform} 提到 {keyword} 的需求，我們 LAYSHOW 雷修是專業的台中在地團隊，可以幫您免費評估，方便加 LINE 聊聊嗎？LINE 搜尋「雷修Layshow」' },
+  { label: 'B 專業版', text: '您好，我是 LAYSHOW 雷修服務團隊。看到您 {keyword} 的需求，我們提供免費到府評估、師傅實名制、完工 7 日保障。歡迎私訊或加 LINE：雷修Layshow' },
+  { label: 'C 急迫版', text: '您好！看到 {keyword} 的問題，這類狀況拖久會擴大，建議盡快處理。LAYSHOW 雷修可以今天就過去評估，方便加 LINE 嗎？「雷修Layshow」' },
+  { label: 'D 客氣版', text: '不好意思冒昧打擾～看到您在找 {keyword} 的師傅，LAYSHOW 雷修是台中的合法立案專業團隊，如果還沒找到適合的，歡迎加 LINE「雷修Layshow」我們幫您評估' },
+];
+
+function showTemplates(hitId, keyword, platform) {
+  const list = TEMPLATES.map(t => {
+    const filled = t.text.replace(/\{keyword\}/g, keyword || '需求').replace(/\{platform\}/g, platform || '貼文');
+    return `<div class="template" onclick="copyTemplate('${escapeAttr(filled)}')">
+      <div class="template-label">${t.label}</div>
+      <div>${escapeHtml(filled)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('tplList').innerHTML = list;
+  document.getElementById('templateModal').classList.add('show');
+}
+
+function closeTemplate() { document.getElementById('templateModal').classList.remove('show'); }
+
+function copyTemplate(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    toast('📋 已複製，貼到 LINE / FB 私訊');
+    closeTemplate();
+  });
+}
+
+function openSettings() {
+  const cur = (getS().supabaseKey || '');
+  const key = prompt('貼上 Supabase Service Role Key（從 monitor_supabase_key.txt）：', cur);
+  if (key && key.length > 50) {
+    const s = getS();
+    s.supabaseKey = key.trim();
+    s.supabaseUrl = SUPABASE_URL;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    toast('✅ Key 已存');
+    loadHits();
+  }
+}
+
+// 啟動 + 30 秒自動刷新
+loadHits();
+setInterval(loadHits, 30000);
+</script>
+</body>
+</html>
