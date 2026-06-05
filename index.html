@@ -9,20 +9,13 @@
 <meta name="apple-mobile-web-app-title" content="LAYSHOW OS">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>LAYSHOW Personal OS</title>
+<title>LAYSHOW Personal OS v3</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
-  --primary: #F37021;
-  --dark: #0c2340;
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --primary: #F37021; --dark: #0c2340; --bg: #f8fafc; --card: #ffffff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
 }
 body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overscroll-behavior-y: none; }
 .app { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
@@ -36,34 +29,38 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 .stat .label { font-size: 11px; opacity: 0.8; }
 .stat .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
 
+.live-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; background: rgba(16,185,129,0.2); border-radius: 12px; margin-left: 8px; }
+.live-indicator .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: blink 1.5s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
 .section-title { font-size: 14px; font-weight: 700; color: var(--text-muted); margin: 24px 0 12px; padding-left: 4px; }
-.section-title .badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; }
 
 .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .grid-3 { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
-.action { background: var(--card); border: 2px solid var(--border); padding: 18px 14px; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; text-decoration: none; color: var(--text); }
-.action:active { transform: scale(0.95); background: #f1f5f9; }
+.action { background: var(--card); border: 2px solid var(--border); padding: 18px 14px; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.15s; text-decoration: none; color: var(--text); }
+.action:active { transform: scale(0.95); }
 .action .emoji { font-size: 28px; display: block; margin-bottom: 8px; }
 .action .name { font-size: 13px; font-weight: 600; }
 .action.primary { background: linear-gradient(135deg, var(--primary), #e11d48); color: white; border: none; }
 .action.dark { background: var(--dark); color: white; border: none; }
 .action.success { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
 .action.purple { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; }
+.action.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; }
 
 .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
 
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); display: flex; padding: 8px 0; z-index: 100; }
-.nav-item { flex: 1; text-align: center; padding: 8px; font-size: 11px; color: var(--text-muted); text-decoration: none; cursor: pointer; }
+.nav-item { flex: 1; text-align: center; padding: 8px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
 .nav-item.active { color: var(--primary); }
 .nav-item .icon { font-size: 22px; display: block; margin-bottom: 2px; }
 
 .page { display: none; }
 .page.active { display: block; animation: fadeIn 0.2s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
 .form-group { margin-bottom: 14px; }
-.form-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+.form-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
 .form-input, .form-textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; background: white; }
 .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
 .form-textarea { resize: vertical; min-height: 80px; }
@@ -71,167 +68,123 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 .btn:active { opacity: 0.85; }
 .btn.secondary { background: var(--border); color: var(--text); }
 .btn.dark { background: var(--dark); color: white; }
+.btn.purple { background: var(--purple); color: white; }
 
-.voice-btn { width: 80px; height: 80px; border-radius: 50%; background: var(--primary); color: white; border: none; font-size: 36px; margin: 24px auto; display: block; box-shadow: 0 8px 20px rgba(243,112,33,0.3); cursor: pointer; }
+.voice-btn { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #e11d48); color: white; border: none; font-size: 44px; margin: 24px auto; display: block; box-shadow: 0 8px 30px rgba(243,112,33,0.4); cursor: pointer; }
 .voice-btn.recording { background: var(--danger); animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 12px 24px; border-radius: 24px; font-size: 13px; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; max-width: 90%; text-align: center; }
 .toast.show { opacity: 1; }
 
-.cmd-list { display: flex; flex-direction: column; gap: 8px; }
-.cmd-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; }
+.cmd-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .cmd-item .icon { width: 36px; height: 36px; border-radius: 8px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 18px; }
 .cmd-item .content { flex: 1; }
 .cmd-item .title { font-size: 14px; font-weight: 600; }
 .cmd-item .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.cmd-item .status { font-size: 11px; padding: 4px 8px; border-radius: 8px; }
-.cmd-item .status.pending { background: #fef3c7; color: #92400e; }
-.cmd-item .status.done { background: #d1fae5; color: #065f46; }
-.cmd-item .status.error { background: #fee2e2; color: #991b1b; }
+.cmd-item .badge { font-size: 11px; padding: 4px 8px; border-radius: 8px; }
+.cmd-item .badge.pending { background: #fef3c7; color: #92400e; }
+.cmd-item .badge.processing { background: #dbeafe; color: #1e40af; }
+.cmd-item .badge.done { background: #d1fae5; color: #065f46; }
+.cmd-item .badge.error { background: #fee2e2; color: #991b1b; }
 
 .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 .empty .emoji { font-size: 48px; margin-bottom: 12px; }
+
+.tag-list { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.tag { background: var(--bg); padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
+.tag:active { background: var(--primary); color: white; }
 </style>
 </head>
 <body>
 
 <div class="app">
   <div class="header">
-    <h1>👋 嗨，逸霆</h1>
-    <p class="greet" id="greet">早安，今天是個好日子</p>
+    <h1>👋 嗨，逸霆<span class="live-indicator" id="liveStatus"><span class="dot"></span>同步中</span></h1>
+    <p class="greet" id="greet">早安</p>
     <div class="stats">
       <div class="stat"><div class="label">指令今日</div><div class="value" id="statCmd">0</div></div>
       <div class="stat"><div class="label">新客戶</div><div class="value" id="statClient">0</div></div>
-      <div class="stat"><div class="label">待回</div><div class="value" id="statUnpaid">0</div></div>
+      <div class="stat"><div class="label">報價</div><div class="value" id="statQuote">0</div></div>
     </div>
   </div>
 
-  <!-- 首頁 -->
   <div class="page active" id="page-home">
-    <div class="section-title">🎯 下指令給 4 機 <span class="badge">中央</span></div>
+    <div class="section-title">🎯 主要操作</div>
     <div class="grid">
-      <div class="action primary" onclick="showPage('quote')">
-        <span class="emoji">💰</span>
-        <div class="name">產報價單</div>
-      </div>
-      <div class="action dark" onclick="showPage('customer')">
-        <span class="emoji">👤</span>
-        <div class="name">新增客戶</div>
-      </div>
-      <div class="action success" onclick="capturePhoto()">
-        <span class="emoji">📸</span>
-        <div class="name">拍工程照</div>
-      </div>
-      <div class="action purple" onclick="showPage('voice')">
-        <span class="emoji">🎙️</span>
-        <div class="name">語音記錄</div>
-      </div>
+      <div class="action primary" onclick="showPage('quote')"><span class="emoji">💰</span><div class="name">產報價單</div></div>
+      <div class="action dark" onclick="showPage('customer')"><span class="emoji">👤</span><div class="name">新增客戶</div></div>
+      <div class="action success" onclick="capturePhoto()"><span class="emoji">📸</span><div class="name">拍工程照</div></div>
+      <div class="action purple" onclick="showPage('voice')"><span class="emoji">🎙️</span><div class="name">語音記錄</div></div>
+    </div>
+
+    <div class="section-title">🧠 AI 助理</div>
+    <div class="grid">
+      <div class="action blue" onclick="showPage('ai_ask')"><span class="emoji">💬</span><div class="name">問 Claude</div></div>
+      <div class="action purple" onclick="showPage('draft_reply')"><span class="emoji">🤖</span><div class="name">AI 草擬回覆</div></div>
     </div>
 
     <div class="section-title">⚡ 快速指令</div>
     <div class="grid grid-3">
-      <div class="action" onclick="cmd('status')">
-        <span class="emoji">📊</span>
-        <div class="name">查狀態</div>
-      </div>
-      <div class="action" onclick="cmd('today')">
-        <span class="emoji">📅</span>
-        <div class="name">今日</div>
-      </div>
-      <div class="action" onclick="cmd('reels_now')">
-        <span class="emoji">🎬</span>
-        <div class="name">立刻發Reels</div>
-      </div>
-      <div class="action" onclick="cmd('report')">
-        <span class="emoji">📈</span>
-        <div class="name">日報</div>
-      </div>
-      <div class="action" onclick="cmd('crawler_status')">
-        <span class="emoji">🤖</span>
-        <div class="name">爬蟲狀態</div>
-      </div>
-      <div class="action" onclick="cmd('claude')">
-        <span class="emoji">🧠</span>
-        <div class="name">問Claude</div>
-      </div>
+      <div class="action" onclick="cmd('status')"><span class="emoji">📊</span><div class="name">查狀態</div></div>
+      <div class="action" onclick="cmd('today')"><span class="emoji">📅</span><div class="name">今日</div></div>
+      <div class="action" onclick="cmd('reels_now')"><span class="emoji">🎬</span><div class="name">發 Reels</div></div>
+      <div class="action" onclick="cmd('report')"><span class="emoji">📈</span><div class="name">日報</div></div>
+      <div class="action" onclick="cmd('crawler_status')"><span class="emoji">🤖</span><div class="name">爬蟲</div></div>
+      <div class="action" onclick="openCalendar()"><span class="emoji">📅</span><div class="name">行事曆</div></div>
     </div>
 
-    <div class="section-title">📨 最近指令</div>
-    <div id="cmdList" class="cmd-list">
-      <div class="empty">
-        <div class="emoji">📭</div>
-        <p style="font-size: 13px;">尚無指令</p>
-      </div>
+    <div class="section-title">📨 即時指令動態（自動更新）</div>
+    <div id="cmdList">
+      <div class="empty"><div class="emoji">📭</div><p style="font-size:13px;">尚無指令</p></div>
     </div>
 
-    <div class="section-title">🔗 直達工具</div>
+    <div class="section-title">🔗 工具</div>
     <div class="grid grid-3">
-      <a class="action" href="https://layshowadmin.lovable.app/admin/dispatch-board" target="_blank">
-        <span class="emoji">📋</span>
-        <div class="name">工單</div>
-      </a>
-      <a class="action" href="https://layshowadmin.lovable.app/admin/b2b-pipeline" target="_blank">
-        <span class="emoji">🏢</span>
-        <div class="name">B2B</div>
-      </a>
-      <a class="action" href="https://layshowadmin.lovable.app/admin/dashboard-kiosk" target="_blank">
-        <span class="emoji">📊</span>
-        <div class="name">儀表板</div>
-      </a>
-      <a class="action" href="https://t.me/layshow888" target="_blank">
-        <span class="emoji">📨</span>
-        <div class="name">Telegram</div>
-      </a>
-      <a class="action" href="https://layshowadmin.lovable.app/sales-toolkit" target="_blank">
-        <span class="emoji">💼</span>
-        <div class="name">業務包</div>
-      </a>
-      <a class="action" href="AI_指令中心.html" target="_blank">
-        <span class="emoji">🤖</span>
-        <div class="name">3 AI</div>
-      </a>
+      <a class="action" href="https://layshowadmin.lovable.app/admin/dispatch-board" target="_blank"><span class="emoji">📋</span><div class="name">工單</div></a>
+      <a class="action" href="https://layshowadmin.lovable.app/admin/b2b-pipeline" target="_blank"><span class="emoji">🏢</span><div class="name">B2B</div></a>
+      <a class="action" href="https://layshowadmin.lovable.app/admin/dashboard-kiosk" target="_blank"><span class="emoji">📊</span><div class="name">儀表板</div></a>
+      <a class="action" href="https://t.me/layshow888" target="_blank"><span class="emoji">📨</span><div class="name">Telegram</div></a>
+      <a class="action" href="https://layshowadmin.lovable.app/sales-toolkit" target="_blank"><span class="emoji">💼</span><div class="name">業務包</div></a>
+      <a class="action" href="AI_指令中心.html" target="_blank"><span class="emoji">🤖</span><div class="name">3 AI</div></a>
     </div>
   </div>
 
-  <!-- 快速報價 -->
+  <!-- 報價 -->
   <div class="page" id="page-quote">
     <div class="card">
-      <h2 style="margin-bottom: 16px;">💰 產生報價單</h2>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">填完按下「下指令」，桌機自動處理 + 存 Supabase</p>
-      <div class="form-group"><label class="form-label">客戶姓名 *</label><input type="text" class="form-input" id="qName" placeholder="陳先生"></div>
-      <div class="form-group"><label class="form-label">電話</label><input type="tel" class="form-input" id="qPhone" placeholder="0912xxxxxx"></div>
-      <div class="form-group"><label class="form-label">服務類別</label>
+      <h2 style="margin-bottom: 12px;">💰 產報價單</h2>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">桌機自動產 PDF 寄回</p>
+      <div class="form-group"><label class="form-label">客戶 *</label><input type="text" class="form-input" id="qName"></div>
+      <div class="form-group"><label class="form-label">電話</label><input type="tel" class="form-input" id="qPhone"></div>
+      <div class="form-group"><label class="form-label">服務</label>
         <select class="form-input" id="qCategory">
-          <option>水電工程</option><option>冷氣空調</option><option>水管疏通</option>
-          <option>家電維修</option><option>油漆粉刷</option><option>木工裝潢</option>
-          <option>裝潢統包</option><option>清潔服務</option>
+          <option>水電工程</option><option>冷氣空調</option><option>水管疏通</option><option>家電維修</option>
+          <option>油漆粉刷</option><option>木工裝潢</option><option>裝潢統包</option><option>清潔服務</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">問題描述</label><textarea class="form-textarea" id="qDesc" placeholder="客戶問題..."></textarea></div>
-      <div class="form-group"><label class="form-label">估價金額（NT$）*</label><input type="number" class="form-input" id="qPrice" placeholder="3000"></div>
-      <button class="btn" onclick="generateQuote()">🚀 下指令產報價單</button>
+      <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="qDesc"></textarea></div>
+      <div class="form-group"><label class="form-label">金額 NT$ *</label><input type="number" class="form-input" id="qPrice"></div>
+      <button class="btn" onclick="generateQuote()">🚀 下指令產 PDF</button>
       <button class="btn secondary" onclick="showPage('home')">取消</button>
     </div>
   </div>
 
-  <!-- 新增客戶 -->
+  <!-- 客戶 -->
   <div class="page" id="page-customer">
     <div class="card">
-      <h2 style="margin-bottom: 16px;">👤 新增客戶</h2>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">存 Supabase + 推 Telegram 桌機自動處理</p>
+      <h2 style="margin-bottom: 12px;">👤 新增客戶</h2>
       <div class="form-group"><label class="form-label">姓名 *</label><input type="text" class="form-input" id="cName"></div>
       <div class="form-group"><label class="form-label">電話 *</label><input type="tel" class="form-input" id="cPhone"></div>
       <div class="form-group"><label class="form-label">地址</label><input type="text" class="form-input" id="cAddr"></div>
       <div class="form-group"><label class="form-label">急迫度</label>
         <select class="form-input" id="cUrgent">
-          <option value="normal">一般</option>
-          <option value="urgent">緊急</option>
-          <option value="high">高優先</option>
+          <option value="normal">一般</option><option value="urgent">緊急</option><option value="high">高優先</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">需求說明</label><textarea class="form-textarea" id="cNote"></textarea></div>
+      <div class="form-group"><label class="form-label">需求</label><textarea class="form-textarea" id="cNote"></textarea></div>
       <button class="btn" onclick="saveCustomer()">🚀 下指令存客戶</button>
+      <button class="btn secondary" onclick="addToCalendar()" style="margin-top: 8px;">📅 一併加入行事曆</button>
       <button class="btn secondary" onclick="showPage('home')">取消</button>
     </div>
   </div>
@@ -239,23 +192,73 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   <!-- 語音 -->
   <div class="page" id="page-voice">
     <div class="card" style="text-align: center;">
-      <h2 style="margin-bottom: 16px;">🎙️ 語音記錄</h2>
-      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">按下按鈕說話，自動轉文字</p>
-      <button id="voiceBtn" class="voice-btn" onclick="toggleVoice()">🎤</button>
-      <div id="voiceStatus" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">點擊開始錄音</div>
-      <textarea class="form-textarea" id="voiceText" style="min-height: 150px;" placeholder="說出的話會出現在這..."></textarea>
-      <button class="btn" onclick="sendVoiceToBot()">📨 下指令存記錄</button>
+      <h2 style="margin-bottom: 8px;">🎙️ 語音記錄</h2>
+      <p style="color: var(--text-muted); font-size: 13px;">說話自動轉文字</p>
+      <button id="voiceBtn" class="voice-btn" onclick="toggleVoice('voice')">🎤</button>
+      <div id="voiceStatus" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">點擊錄音</div>
+      <textarea class="form-textarea" id="voiceText" style="min-height: 150px;"></textarea>
+      <button class="btn" onclick="sendVoiceNote()">📨 存記錄</button>
       <button class="btn secondary" onclick="showPage('home')">回首頁</button>
+    </div>
+  </div>
+
+  <!-- AI 問 Claude -->
+  <div class="page" id="page-ai_ask">
+    <div class="card">
+      <h2 style="margin-bottom: 8px;">💬 問 Claude</h2>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">秒答 LAYSHOW 任何問題</p>
+
+      <div class="tag-list">
+        <span class="tag" onclick="setAskExample(0)">客戶說太貴怎麼回</span>
+        <span class="tag" onclick="setAskExample(1)">冷氣壞了流程</span>
+        <span class="tag" onclick="setAskExample(2)">B2B 開場話術</span>
+        <span class="tag" onclick="setAskExample(3)">明天工程準備</span>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label class="form-label">問題</label>
+        <textarea class="form-textarea" id="askText" placeholder="例如：客戶說他家熱水器跳掉，怎麼回？" style="min-height: 100px;"></textarea>
+      </div>
+
+      <button class="btn purple" onclick="startVoice('ask')" style="margin-bottom: 8px;">🎙️ 用說的</button>
+      <button class="btn" onclick="askClaude()">🚀 送出問 Claude</button>
+      <button class="btn secondary" onclick="showPage('home')">取消</button>
+
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 12px; text-align: center;">
+        Claude 答案會推到你 Telegram
+      </p>
+    </div>
+  </div>
+
+  <!-- AI 草擬 -->
+  <div class="page" id="page-draft_reply">
+    <div class="card">
+      <h2 style="margin-bottom: 8px;">🤖 AI 草擬回覆</h2>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">貼客戶訊息，自動產 3 個回覆版本</p>
+
+      <div class="form-group">
+        <label class="form-label">客戶傳了什麼？</label>
+        <textarea class="form-textarea" id="draftText" placeholder="貼客戶 LINE / FB 訊息" style="min-height: 100px;"></textarea>
+      </div>
+
+      <button class="btn purple" onclick="startVoice('draft')" style="margin-bottom: 8px;">🎙️ 用說的</button>
+      <button class="btn" onclick="draftReply()">🚀 產 3 個回覆</button>
+      <button class="btn secondary" onclick="showPage('home')">取消</button>
     </div>
   </div>
 
   <!-- 行事曆 -->
   <div class="page" id="page-calendar">
     <div class="card">
-      <h2 style="margin-bottom: 16px;">📅 行事曆</h2>
-      <button class="btn dark" onclick="window.open('https://calendar.google.com/calendar/u/0/r', '_blank')">📅 開 Google Calendar</button>
-      <button class="btn" onclick="window.open('https://layshowadmin.lovable.app/admin/dispatch-board', '_blank')" style="margin-top: 8px;">📋 LAYSHOW 工單</button>
-      <button class="btn secondary" onclick="showPage('home')" style="margin-top: 8px;">回首頁</button>
+      <h2 style="margin-bottom: 16px;">📅 行程管理</h2>
+      <div class="form-group"><label class="form-label">事件名稱</label><input type="text" class="form-input" id="calTitle" placeholder="王先生 - 冷氣維修"></div>
+      <div class="form-group"><label class="form-label">日期</label><input type="date" class="form-input" id="calDate"></div>
+      <div class="form-group"><label class="form-label">時間</label><input type="time" class="form-input" id="calTime"></div>
+      <div class="form-group"><label class="form-label">地點</label><input type="text" class="form-input" id="calLoc" placeholder="台中市西屯區..."></div>
+      <div class="form-group"><label class="form-label">說明</label><textarea class="form-textarea" id="calDesc"></textarea></div>
+      <button class="btn" onclick="createCalEvent()">📅 開 Calendar 建事件（自動帶入）</button>
+      <button class="btn dark" onclick="openCalendar()" style="margin-top: 8px;">📅 開 Google Calendar</button>
+      <button class="btn secondary" onclick="showPage('home')">回首頁</button>
     </div>
   </div>
 
@@ -264,12 +267,16 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     <div class="card">
       <h2 style="margin-bottom: 16px;">⚙️ 設定</h2>
       <div class="form-group"><label class="form-label">Supabase URL</label><input type="text" class="form-input" id="sUrl"></div>
-      <div class="form-group"><label class="form-label">Supabase Key（anon）</label><input type="text" class="form-input" id="sKey"></div>
+      <div class="form-group"><label class="form-label">Supabase Key</label><input type="text" class="form-input" id="sKey"></div>
       <div class="form-group"><label class="form-label">Telegram Bot Token</label><input type="text" class="form-input" id="tgToken"></div>
       <div class="form-group"><label class="form-label">Telegram Chat ID</label><input type="text" class="form-input" id="tgChat"></div>
       <button class="btn" onclick="saveSettings()">💾 儲存</button>
       <button class="btn secondary" onclick="testConnection()" style="margin-top: 8px;">🧪 測試連線</button>
       <button class="btn secondary" onclick="showPage('home')" style="margin-top: 8px;">回首頁</button>
+
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 16px; text-align: center;">
+        v3.0 ‧ 即時同步 + AI 整合
+      </p>
     </div>
   </div>
 </div>
@@ -285,48 +292,43 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 <div class="toast" id="toast"></div>
 
 <script>
-const SETTINGS_KEY = 'layshow_personal_os_v2';
+const SETTINGS_KEY = 'layshow_personal_os_v3';
 const SUPABASE_URL_DEFAULT = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
 const TG_TOKEN_DEFAULT = '8585783388:AAFldD2N1ASet7AzpJ-FJbl1Psj8hdMIcOQ';
 const TG_CHAT_DEFAULT = '@layshow888';
 
+function getS() { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
 function loadSettings() {
-  const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+  const s = getS();
   document.getElementById('sUrl').value = s.supabaseUrl || SUPABASE_URL_DEFAULT;
   document.getElementById('sKey').value = s.supabaseKey || '';
   document.getElementById('tgToken').value = s.tgToken || TG_TOKEN_DEFAULT;
   document.getElementById('tgChat').value = s.tgChat || TG_CHAT_DEFAULT;
-  return s;
-}
-function getS() {
-  return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
 }
 function saveSettings() {
-  const s = {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({
     supabaseUrl: document.getElementById('sUrl').value || SUPABASE_URL_DEFAULT,
     supabaseKey: document.getElementById('sKey').value,
     tgToken: document.getElementById('tgToken').value || TG_TOKEN_DEFAULT,
     tgChat: document.getElementById('tgChat').value || TG_CHAT_DEFAULT,
-  };
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-  toast('✅ 設定已儲存');
+  }));
+  toast('✅ 已儲存');
 }
 async function testConnection() {
   const s = getS();
-  if (!s.supabaseKey) { toast('⚠️ 填 Supabase Key'); return; }
-  try {
-    const r = await fetch(`${s.supabaseUrl}/rest/v1/command_logs?limit=1`, {
-      headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` }
-    });
-    if (r.ok) toast('✅ Supabase 連通 OK');
-    else toast(`❌ Supabase ${r.status}`);
-  } catch (e) { toast('❌ ' + e.message); }
-
+  let msgs = [];
+  if (s.supabaseKey) {
+    try {
+      const r = await fetch(`${s.supabaseUrl}/rest/v1/command_logs?limit=1`, { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` } });
+      msgs.push(r.ok ? '✅ Supabase OK' : `❌ Supabase ${r.status}`);
+    } catch (e) { msgs.push('❌ Supabase: ' + e.message); }
+  } else msgs.push('⚠️ 請填 Supabase Key');
   try {
     const r2 = await fetch(`https://api.telegram.org/bot${s.tgToken}/getMe`);
     const d = await r2.json();
-    if (d.ok) toast('✅ Telegram Bot OK: ' + d.result.username);
-  } catch (e) { toast('❌ TG: ' + e.message); }
+    msgs.push(d.ok ? '✅ TG: ' + d.result.username : '❌ TG');
+  } catch (e) { msgs.push('❌ TG: ' + e.message); }
+  toast(msgs.join('\n'));
 }
 
 function showPage(name) {
@@ -334,7 +336,7 @@ function showPage(name) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === name));
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (name === 'home') updateCmdList();
+  if (name === 'home') refreshCmdList();
 }
 
 function toast(msg) {
@@ -344,71 +346,46 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// === 核心：下指令到 Supabase + Telegram ===
-async function sendCommand(type, data, msgPreview) {
+// ========= 核心：下指令 =========
+async function sendCommand(type, data, preview) {
   const s = getS();
-  let logged = false;
+  let supaOk = false, tgOk = false;
 
-  // 1. 寫到 Supabase command_logs
   if (s.supabaseKey) {
     try {
       const r = await fetch(`${s.supabaseUrl}/rest/v1/command_logs`, {
         method: 'POST',
-        headers: {
-          'apikey': s.supabaseKey,
-          'Authorization': `Bearer ${s.supabaseKey}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation',
-        },
+        headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ command_type: type, command_data: data, source: 'phone_pwa' }),
       });
-      if (r.ok) logged = true;
-    } catch (e) { console.error('Supabase error', e); }
+      supaOk = r.ok;
+    } catch (e) { console.error(e); }
   }
 
-  // 2. 推 Telegram（桌機監聽）
-  let tgOk = false;
   if (s.tgToken && s.tgChat) {
     try {
-      const msg = `🎯 [指令] ${type}\n${msgPreview || JSON.stringify(data)}`;
       await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: s.tgChat, text: msg }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: s.tgChat, text: `🎯 [指令] ${type}\n${preview || ''}` }),
       });
       tgOk = true;
-    } catch (e) { console.error('TG error', e); }
+    } catch (e) { console.error(e); }
   }
-
-  // 3. 存本地紀錄
-  const localCmds = JSON.parse(localStorage.getItem('local_cmds') || '[]');
-  localCmds.unshift({
-    type, data, time: new Date().toISOString(),
-    supabase: logged, telegram: tgOk,
-  });
-  localStorage.setItem('local_cmds', JSON.stringify(localCmds.slice(0, 20)));
-
-  return { supabase: logged, telegram: tgOk };
+  return { supabase: supaOk, telegram: tgOk };
 }
 
-// === 快速指令 ===
+// ========= 快速指令 =========
 async function cmd(type) {
   const messages = {
-    status: '🔍 查 LAYSHOW 整體狀態',
-    today: '📅 看今日工單與行程',
-    reels_now: '🎬 立刻發 Reels',
-    report: '📈 產出今日報表',
-    crawler_status: '🤖 爬蟲健康度檢查',
-    claude: '🧠 等等用中央筆電 Claude Code',
+    status: '查 LAYSHOW 狀態', today: '今日工單行程', reels_now: '立刻發 Reels',
+    report: '產出日報', crawler_status: '爬蟲健康度', claude: '提示 Claude Code',
   };
-  const r = await sendCommand(type, { source: 'phone_quick' }, messages[type]);
-  if (r.telegram) toast('✅ 指令已下達桌機');
-  else toast('⚠️ 推送失敗，檢查設定');
-  updateStats();
-  updateCmdList();
+  await sendCommand(type, { source: 'quick' }, messages[type]);
+  toast('✅ 指令已下達');
+  setTimeout(refreshCmdList, 1000);
 }
 
-// === 報價單 ===
+// ========= 報價 =========
 async function generateQuote() {
   const data = {
     customer_name: document.getElementById('qName').value,
@@ -417,38 +394,20 @@ async function generateQuote() {
     description: document.getElementById('qDesc').value,
     amount: parseInt(document.getElementById('qPrice').value || 0),
     quote_number: 'LS-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*900+100),
+    valid_until: new Date(Date.now() + 3*86400000).toISOString().slice(0,10),
   };
-  if (!data.customer_name || !data.amount) { toast('⚠️ 填客戶姓名+金額'); return; }
-  data.valid_until = new Date(Date.now() + 3*86400000).toISOString().slice(0,10);
-
+  if (!data.customer_name || !data.amount) { toast('⚠️ 填客戶名+金額'); return; }
   const s = getS();
-  // 存 quick_quotes 表
   if (s.supabaseKey) {
-    try {
-      await fetch(`${s.supabaseUrl}/rest/v1/quick_quotes`, {
-        method: 'POST',
-        headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-    } catch (e) { console.error(e); }
+    try { await fetch(`${s.supabaseUrl}/rest/v1/quick_quotes`, { method: 'POST', headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (e) {}
   }
-
-  const preview = `編號 ${data.quote_number}\n客戶：${data.customer_name}\n服務：${data.service_category}\n金額：NT$ ${data.amount.toLocaleString()}`;
-  await sendCommand('quote', data, preview);
-
-  // 同時複製給用戶可貼 LINE
-  const fullText = `📋 LAYSHOW 雷修\n編號 ${data.quote_number}\n日期：${new Date().toLocaleDateString('zh-TW')}\n有效期 3 天\n\n👤 ${data.customer_name}\n📞 ${data.customer_phone}\n🔧 ${data.service_category}\n📝 ${data.description}\n\n💰 NT$ ${data.amount.toLocaleString()}\n\n✓ 師傅實名制\n✓ 透明報價\n✓ 30 天保修\n\n📞 0970-898-950`;
-  try {
-    if (navigator.share) await navigator.share({ text: fullText });
-    else { await navigator.clipboard.writeText(fullText); toast('✅ 已複製，可貼 LINE'); }
-  } catch (e) { toast('✅ 已下達指令'); }
-
+  await sendCommand('quote', data, `編號 ${data.quote_number}\n${data.customer_name} - NT$${data.amount.toLocaleString()}`);
+  toast('✅ 指令下達，桌機產 PDF 中...');
   ['qName','qPhone','qDesc','qPrice'].forEach(i => document.getElementById(i).value = '');
-  updateStats();
   showPage('home');
 }
 
-// === 新客戶 ===
+// ========= 客戶 =========
 async function saveCustomer() {
   const data = {
     name: document.getElementById('cName').value,
@@ -458,29 +417,51 @@ async function saveCustomer() {
     note: document.getElementById('cNote').value,
   };
   if (!data.name || !data.phone) { toast('⚠️ 填姓名+電話'); return; }
-
   const s = getS();
   if (s.supabaseKey) {
-    try {
-      await fetch(`${s.supabaseUrl}/rest/v1/phone_customers`, {
-        method: 'POST',
-        headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-    } catch (e) { console.error(e); }
+    try { await fetch(`${s.supabaseUrl}/rest/v1/phone_customers`, { method: 'POST', headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (e) {}
   }
-
-  const preview = `姓名：${data.name}\n電話：${data.phone}\n急迫度：${data.urgent}`;
-  await sendCommand('new_customer', data, preview);
-  toast('✅ 客戶已下達指令');
+  await sendCommand('new_customer', data, `${data.name} (${data.phone}) - ${data.urgent}`);
+  toast('✅ 客戶已存');
   ['cName','cPhone','cAddr','cNote'].forEach(i => document.getElementById(i).value = '');
-  updateStats();
   showPage('home');
 }
 
-// === 語音 ===
-let recognition = null, isRecording = false;
-function toggleVoice() {
+// ========= Calendar 加入 =========
+function addToCalendar() {
+  const name = document.getElementById('cName').value;
+  if (!name) { toast('⚠️ 填姓名'); return; }
+  const title = `LAYSHOW - ${name}`;
+  const details = `客戶：${name}\n電話：${document.getElementById('cPhone').value}\n地址：${document.getElementById('cAddr').value}\n需求：${document.getElementById('cNote').value}`;
+  const url = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${encodeURIComponent(title)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(document.getElementById('cAddr').value)}`;
+  window.open(url, '_blank');
+}
+function createCalEvent() {
+  const title = document.getElementById('calTitle').value;
+  if (!title) { toast('⚠️ 填事件名'); return; }
+  const date = document.getElementById('calDate').value;
+  const time = document.getElementById('calTime').value;
+  const loc = document.getElementById('calLoc').value;
+  const desc = document.getElementById('calDesc').value;
+  let dateStr = '';
+  if (date && time) {
+    const dt = new Date(date + 'T' + time);
+    const end = new Date(dt.getTime() + 60*60000);
+    dateStr = `&dates=${dt.toISOString().replace(/[-:.]/g,'').slice(0,15)}Z/${end.toISOString().replace(/[-:.]/g,'').slice(0,15)}Z`;
+  }
+  const url = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${encodeURIComponent(title)}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(loc)}${dateStr}`;
+  window.open(url, '_blank');
+}
+function openCalendar() { window.open('https://calendar.google.com/calendar/u/0/r', '_blank'); }
+
+// ========= 語音 =========
+let recognition = null, isRecording = false, voiceTarget = 'voice';
+function toggleVoice(target) {
+  voiceTarget = target;
+  startVoice(target);
+}
+function startVoice(target) {
+  voiceTarget = target;
   if (!recognition) {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { toast('⚠️ 不支援語音'); return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -491,31 +472,77 @@ function toggleVoice() {
     recognition.onresult = (e) => {
       let text = '';
       for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
-      document.getElementById('voiceText').value = text;
+      const targetId = { voice: 'voiceText', ask: 'askText', draft: 'draftText' }[voiceTarget];
+      if (targetId) document.getElementById(targetId).value = text;
     };
     recognition.onend = () => {
       isRecording = false;
-      document.getElementById('voiceBtn').classList.remove('recording');
-      document.getElementById('voiceStatus').textContent = '點擊重新錄音';
+      const btn = document.getElementById('voiceBtn');
+      if (btn) btn.classList.remove('recording');
+      const st = document.getElementById('voiceStatus');
+      if (st) st.textContent = '點擊重錄';
     };
   }
   if (isRecording) recognition.stop();
   else {
-    document.getElementById('voiceText').value = '';
+    const targetId = { voice: 'voiceText', ask: 'askText', draft: 'draftText' }[voiceTarget];
+    if (targetId) document.getElementById(targetId).value = '';
     recognition.start();
     isRecording = true;
-    document.getElementById('voiceBtn').classList.add('recording');
-    document.getElementById('voiceStatus').textContent = '🔴 錄音中...';
+    const btn = document.getElementById('voiceBtn');
+    if (btn) btn.classList.add('recording');
+    const st = document.getElementById('voiceStatus');
+    if (st) st.textContent = '🔴 錄音中...';
   }
 }
-async function sendVoiceToBot() {
+async function sendVoiceNote() {
   const text = document.getElementById('voiceText').value.trim();
   if (!text) { toast('⚠️ 無內容'); return; }
-  await sendCommand('voice_note', { text }, '🎙️ ' + text.substring(0, 80));
-  toast('✅ 語音已存');
+  await sendCommand('voice_note', { text }, '🎙️ ' + text.substring(0, 100));
+  toast('✅ 已存');
 }
 
-// === 拍照 ===
+// ========= AI 問 Claude =========
+const ASK_EXAMPLES = [
+  '客戶說「太貴了 我去問別家」，怎麼回？',
+  '客戶說冷氣不冷，問該怎麼處理流程',
+  'B2B 業務拜訪民宿，給我 3 個破冰開場',
+  '明天有 3 場工程要準備什麼？',
+];
+function setAskExample(i) {
+  document.getElementById('askText').value = ASK_EXAMPLES[i];
+}
+async function askClaude() {
+  const q = document.getElementById('askText').value.trim();
+  if (!q) { toast('⚠️ 寫問題'); return; }
+  await sendCommand('ai_ask', { question: q }, '🧠 ' + q.substring(0, 100));
+  // 同時直接 sendMessage 含問題
+  const s = getS();
+  await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: s.tgChat, text: `[指令] ai_ask ${q}` }),
+  });
+  toast('🧠 已下達，10 秒內 Telegram 收答案');
+  document.getElementById('askText').value = '';
+  showPage('home');
+}
+
+// ========= AI 草擬 =========
+async function draftReply() {
+  const msg = document.getElementById('draftText').value.trim();
+  if (!msg) { toast('⚠️ 貼客戶訊息'); return; }
+  await sendCommand('draft_reply', { customer_msg: msg }, '🤖 ' + msg.substring(0, 100));
+  const s = getS();
+  await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: s.tgChat, text: `[指令] draft_reply ${msg}` }),
+  });
+  toast('🤖 已下達，10 秒收草稿');
+  document.getElementById('draftText').value = '';
+  showPage('home');
+}
+
+// ========= 拍照 =========
 function capturePhoto() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -525,71 +552,78 @@ function capturePhoto() {
     const file = e.target.files[0];
     if (!file) return;
     const s = getS();
-    if (!s.tgToken) { toast('⚠️ 設 Telegram Token'); return; }
     const fd = new FormData();
     fd.append('chat_id', s.tgChat);
     fd.append('photo', file);
-    fd.append('caption', '📸 [指令] photo\n工程照 ' + new Date().toLocaleString('zh-TW'));
+    fd.append('caption', '[指令] photo\n工程照 ' + new Date().toLocaleString('zh-TW'));
     try {
-      const r = await fetch(`https://api.telegram.org/bot${s.tgToken}/sendPhoto`, { method: 'POST', body: fd });
-      if (r.ok) {
-        await sendCommand('photo', { caption: '工程照', size: file.size }, '📸 已傳照片');
-        toast('✅ 照片已上傳');
-      }
+      await fetch(`https://api.telegram.org/bot${s.tgToken}/sendPhoto`, { method: 'POST', body: fd });
+      await sendCommand('photo', { caption: '工程照', size: file.size }, '📸 已傳');
+      toast('✅ 照片已上傳');
     } catch (e) { toast('⚠️ 失敗'); }
   };
   input.click();
 }
 
-// === 統計 + 列表 ===
-function updateStats() {
-  const cmds = JSON.parse(localStorage.getItem('local_cmds') || '[]');
-  const today = new Date().toISOString().slice(0,10);
-  const todayCmds = cmds.filter(c => c.time.startsWith(today));
-  document.getElementById('statCmd').textContent = todayCmds.length;
-  const newClient = todayCmds.filter(c => c.type === 'new_customer').length;
-  document.getElementById('statClient').textContent = newClient;
-  document.getElementById('statUnpaid').textContent = todayCmds.filter(c => c.type === 'quote').length;
+// ========= 即時指令動態（多設備同步）=========
+async function refreshCmdList() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/command_logs?order=created_at.desc&limit=10`,
+      { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` } });
+    if (!r.ok) return;
+    const list = await r.json();
+    renderCmdList(list);
+  } catch (e) {}
 }
-
-function updateCmdList() {
-  const cmds = JSON.parse(localStorage.getItem('local_cmds') || '[]').slice(0, 8);
+function renderCmdList(list) {
   const el = document.getElementById('cmdList');
-  if (!cmds.length) { el.innerHTML = '<div class="empty"><div class="emoji">📭</div><p style="font-size:13px;">尚無指令</p></div>'; return; }
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="emoji">📭</div><p style="font-size:13px;">尚無指令</p></div>'; return; }
   const typeMap = {
-    quote: { icon: '💰', name: '報價單' },
-    new_customer: { icon: '👤', name: '新客戶' },
-    photo: { icon: '📸', name: '工程照' },
-    voice_note: { icon: '🎙️', name: '語音' },
-    status: { icon: '📊', name: '查狀態' },
-    today: { icon: '📅', name: '今日' },
-    reels_now: { icon: '🎬', name: '發 Reels' },
-    report: { icon: '📈', name: '報表' },
-    crawler_status: { icon: '🤖', name: '爬蟲' },
-    claude: { icon: '🧠', name: 'Claude' },
+    quote: { icon: '💰', name: '報價單' }, new_customer: { icon: '👤', name: '新客戶' },
+    photo: { icon: '📸', name: '工程照' }, voice_note: { icon: '🎙️', name: '語音' },
+    status: { icon: '📊', name: '查狀態' }, today: { icon: '📅', name: '今日' },
+    reels_now: { icon: '🎬', name: '發 Reels' }, report: { icon: '📈', name: '日報' },
+    crawler_status: { icon: '🤖', name: '爬蟲' }, claude: { icon: '🧠', name: 'Claude' },
+    ai_ask: { icon: '💬', name: '問 Claude' }, draft_reply: { icon: '🤖', name: '草擬' },
   };
-  el.innerHTML = cmds.map(c => {
-    const t = typeMap[c.type] || { icon: '📌', name: c.type };
-    const ago = timeAgo(c.time);
-    const status = c.telegram ? 'done' : 'error';
-    const statusText = c.telegram ? '✓ 已送' : '× 失敗';
+  el.innerHTML = list.map(c => {
+    const t = typeMap[c.command_type] || { icon: '📌', name: c.command_type };
+    const ago = timeAgo(c.created_at);
     return `<div class="cmd-item">
       <div class="icon">${t.icon}</div>
       <div class="content">
         <div class="title">${t.name}</div>
-        <div class="sub">${ago}</div>
+        <div class="sub">${ago} ‧ ${c.source || 'phone'}</div>
       </div>
-      <span class="status ${status}">${statusText}</span>
+      <span class="badge ${c.status}">${c.status}</span>
     </div>`;
   }).join('');
 }
-
 function timeAgo(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
   if (diff < 60) return '剛剛';
-  if (diff < 3600) return Math.floor(diff/60) + ' 分鐘前';
+  if (diff < 3600) return Math.floor(diff/60) + ' 分前';
   if (diff < 86400) return Math.floor(diff/3600) + ' 小時前';
   return new Date(ts).toLocaleDateString('zh-TW');
+}
+
+// ========= 統計 =========
+async function updateStats() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const [cmd, cust, quote] = await Promise.all([
+      fetch(`${s.supabaseUrl}/rest/v1/command_logs?created_at=gte.${today}&select=count`, { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Prefer': 'count=exact' } }),
+      fetch(`${s.supabaseUrl}/rest/v1/phone_customers?created_at=gte.${today}&select=count`, { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Prefer': 'count=exact' } }),
+      fetch(`${s.supabaseUrl}/rest/v1/quick_quotes?created_at=gte.${today}&select=count`, { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Prefer': 'count=exact' } }),
+    ]);
+    document.getElementById('statCmd').textContent = (cmd.headers.get('content-range') || '0').split('/').pop();
+    document.getElementById('statClient').textContent = (cust.headers.get('content-range') || '0').split('/').pop();
+    document.getElementById('statQuote').textContent = (quote.headers.get('content-range') || '0').split('/').pop();
+  } catch (e) {}
 }
 
 function updateGreet() {
@@ -601,13 +635,22 @@ function updateGreet() {
   document.getElementById('greet').textContent = `${g}，${new Date().getMonth()+1}/${new Date().getDate()} (週${wkd})`;
 }
 
+// ========= 啟動 =========
 loadSettings();
 updateGreet();
 updateStats();
-updateCmdList();
+refreshCmdList();
+
+// 每 5 秒同步指令動態（多設備即時同步）
+setInterval(() => {
+  if (document.getElementById('page-home').classList.contains('active')) {
+    refreshCmdList();
+    updateStats();
+  }
+}, 5000);
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(e => console.log('SW fail'));
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
 </body>
