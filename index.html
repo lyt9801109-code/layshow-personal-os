@@ -221,11 +221,13 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       </div>
 
       <button class="btn purple" onclick="startVoice('ask')" style="margin-bottom: 8px;">🎙️ 用說的</button>
-      <button class="btn" onclick="askClaude()">🚀 送出問 Claude</button>
+      <button class="btn" id="askBtn" onclick="askClaude()">🚀 送出問 Claude</button>
       <button class="btn secondary" onclick="showPage('home')">取消</button>
 
+      <div id="askResult"></div>
+
       <p style="font-size: 11px; color: var(--text-muted); margin-top: 12px; text-align: center;">
-        Claude 答案會推到你 Telegram
+        答案直接顯示在這頁 + 同步到 Telegram
       </p>
     </div>
   </div>
@@ -242,8 +244,9 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       </div>
 
       <button class="btn purple" onclick="startVoice('draft')" style="margin-bottom: 8px;">🎙️ 用說的</button>
-      <button class="btn" onclick="draftReply()">🚀 產 3 個回覆</button>
+      <button class="btn" id="draftBtn" onclick="draftReply()">🚀 產 3 個回覆</button>
       <button class="btn secondary" onclick="showPage('home')">取消</button>
+      <div id="draftResult"></div>
     </div>
   </div>
 
@@ -270,6 +273,11 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <div class="form-group"><label class="form-label">Supabase Key</label><input type="text" class="form-input" id="sKey"></div>
       <div class="form-group"><label class="form-label">Telegram Bot Token</label><input type="text" class="form-input" id="tgToken"></div>
       <div class="form-group"><label class="form-label">Telegram Chat ID</label><input type="text" class="form-input" id="tgChat"></div>
+      <div class="form-group">
+        <label class="form-label">🧠 Anthropic API Key（PWA 直連 Claude）</label>
+        <input type="text" class="form-input" id="anthropicKey" placeholder="sk-ant-api03-...">
+        <p style="font-size:11px;color:#888;margin-top:4px;">填了就能 PWA 直接問 Claude，不用桌機</p>
+      </div>
       <button class="btn" onclick="saveSettings()">💾 儲存</button>
       <button class="btn secondary" onclick="testConnection()" style="margin-top: 8px;">🧪 測試連線</button>
       <button class="btn secondary" onclick="showPage('home')" style="margin-top: 8px;">回首頁</button>
@@ -304,6 +312,7 @@ function loadSettings() {
   document.getElementById('sKey').value = s.supabaseKey || '';
   document.getElementById('tgToken').value = s.tgToken || TG_TOKEN_DEFAULT;
   document.getElementById('tgChat').value = s.tgChat || TG_CHAT_DEFAULT;
+  document.getElementById('anthropicKey').value = s.anthropicKey || '';
 }
 function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({
@@ -311,6 +320,7 @@ function saveSettings() {
     supabaseKey: document.getElementById('sKey').value,
     tgToken: document.getElementById('tgToken').value || TG_TOKEN_DEFAULT,
     tgChat: document.getElementById('tgChat').value || TG_CHAT_DEFAULT,
+    anthropicKey: document.getElementById('anthropicKey').value || '',
   }));
   toast('✅ 已儲存');
 }
@@ -515,32 +525,99 @@ function setAskExample(i) {
 async function askClaude() {
   const q = document.getElementById('askText').value.trim();
   if (!q) { toast('⚠️ 寫問題'); return; }
-  await sendCommand('ai_ask', { question: q }, '🧠 ' + q.substring(0, 100));
-  // 同時直接 sendMessage 含問題
   const s = getS();
-  await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: s.tgChat, text: `[指令] ai_ask ${q}` }),
-  });
-  toast('🧠 已下達，10 秒內 Telegram 收答案');
-  document.getElementById('askText').value = '';
-  showPage('home');
+  if (!s.anthropicKey) { toast('⚠️ 請先到「設定」貼 Anthropic API Key'); showPage('settings'); return; }
+
+  toast('🧠 Claude 思考中...');
+  document.getElementById('askBtn').disabled = true;
+  document.getElementById('askResult').innerHTML = '<div style="text-align:center;padding:30px;color:#888;">🧠 Claude 思考中...</div>';
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 800,
+        system: '你是 LAYSHOW 雷修（台灣家修平台）的戰略顧問。回答簡潔有重點，繁體中文，300 字內，給可執行的建議。',
+        messages: [{ role: 'user', content: q }],
+      }),
+    });
+    const d = await r.json();
+    if (d.content && d.content[0]) {
+      const answer = d.content[0].text;
+      document.getElementById('askResult').innerHTML = `
+        <div style="background:#f0f9ff;border:2px solid #3b82f6;border-radius:12px;padding:14px;margin-top:14px;">
+          <div style="font-size:11px;color:#888;margin-bottom:6px;">🧠 Claude 答覆</div>
+          <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;">${answer}</div>
+          <button class="btn secondary" style="margin-top:10px;font-size:12px;padding:8px;" onclick="copyText(\`${answer.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">📋 複製答案</button>
+        </div>`;
+      // 也記錄到 Supabase + 推 Telegram
+      await sendCommand('ai_ask', { question: q, answer: answer.substring(0, 500) }, `🧠 Q: ${q.substring(0, 50)}\n\nA: ${answer.substring(0, 800)}`);
+    } else {
+      document.getElementById('askResult').innerHTML = '<div style="color:red;padding:12px;">❌ ' + (d.error?.message || 'Claude 沒回應') + '</div>';
+    }
+  } catch (e) {
+    document.getElementById('askResult').innerHTML = '<div style="color:red;padding:12px;">❌ ' + e.message + '</div>';
+  }
+  document.getElementById('askBtn').disabled = false;
+}
+
+async function draftReplyDirect() {
+  const msg = document.getElementById('draftText').value.trim();
+  if (!msg) { toast('⚠️ 貼客戶訊息'); return; }
+  const s = getS();
+  if (!s.anthropicKey) { toast('⚠️ 請先到「設定」貼 Anthropic API Key'); showPage('settings'); return; }
+
+  document.getElementById('draftBtn').disabled = true;
+  document.getElementById('draftResult').innerHTML = '<div style="text-align:center;padding:30px;color:#888;">🤖 草擬中...</div>';
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1000,
+        system: '你是 LAYSHOW 雷修客服。產 3 個回覆版本：A=專業、B=親切、C=精簡。格式：\n【A 專業版】\n...\n\n【B 親切版】\n...\n\n【C 精簡版】\n...',
+        messages: [{ role: 'user', content: '客戶傳：' + msg }],
+      }),
+    });
+    const d = await r.json();
+    if (d.content && d.content[0]) {
+      const reply = d.content[0].text;
+      document.getElementById('draftResult').innerHTML = `
+        <div style="background:#faf5ff;border:2px solid #8b5cf6;border-radius:12px;padding:14px;margin-top:14px;">
+          <div style="font-size:11px;color:#888;margin-bottom:6px;">🤖 3 個回覆版本</div>
+          <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;">${reply}</div>
+          <button class="btn secondary" style="margin-top:10px;font-size:12px;padding:8px;" onclick="copyText(\`${reply.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">📋 複製</button>
+        </div>`;
+      await sendCommand('draft_reply', { customer_msg: msg, reply: reply.substring(0, 500) }, `🤖 客戶: ${msg.substring(0, 50)}\n\n${reply.substring(0, 800)}`);
+    } else {
+      document.getElementById('draftResult').innerHTML = '<div style="color:red;padding:12px;">❌ ' + (d.error?.message || '失敗') + '</div>';
+    }
+  } catch (e) {
+    document.getElementById('draftResult').innerHTML = '<div style="color:red;padding:12px;">❌ ' + e.message + '</div>';
+  }
+  document.getElementById('draftBtn').disabled = false;
+}
+
+function copyText(t) {
+  navigator.clipboard.writeText(t).then(() => toast('✅ 已複製'));
 }
 
 // ========= AI 草擬 =========
-async function draftReply() {
-  const msg = document.getElementById('draftText').value.trim();
-  if (!msg) { toast('⚠️ 貼客戶訊息'); return; }
-  await sendCommand('draft_reply', { customer_msg: msg }, '🤖 ' + msg.substring(0, 100));
-  const s = getS();
-  await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: s.tgChat, text: `[指令] draft_reply ${msg}` }),
-  });
-  toast('🤖 已下達，10 秒收草稿');
-  document.getElementById('draftText').value = '';
-  showPage('home');
-}
+async function draftReply() { return draftReplyDirect(); }
 
 // ========= 拍照 =========
 function capturePhoto() {
