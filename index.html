@@ -154,19 +154,49 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   <div class="page" id="page-quote">
     <div class="card">
       <h2 style="margin-bottom: 12px;">💰 產報價單</h2>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">桌機自動產 PDF 寄回</p>
-      <div class="form-group"><label class="form-label">客戶 *</label><input type="text" class="form-input" id="qName"></div>
-      <div class="form-group"><label class="form-label">電話</label><input type="tel" class="form-input" id="qPhone"></div>
-      <div class="form-group"><label class="form-label">服務</label>
-        <select class="form-input" id="qCategory">
-          <option>水電工程</option><option>冷氣空調</option><option>水管疏通</option><option>家電維修</option>
-          <option>油漆粉刷</option><option>木工裝潢</option><option>裝潢統包</option><option>清潔服務</option>
-        </select>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">鈺欣霆實業 ‧ 統編 83107252</p>
+
+      <div style="background:#f0f9ff;border-left:3px solid #3b82f6;padding:8px 10px;border-radius:6px;margin-bottom:12px;">
+        <div style="font-size:11px;color:#1e40af;font-weight:600;">👤 客戶資料</div>
       </div>
-      <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="qDesc"></textarea></div>
-      <div class="form-group"><label class="form-label">金額 NT$ *</label><input type="number" class="form-input" id="qPrice"></div>
-      <button class="btn" onclick="generateQuote()">🚀 下指令產 PDF</button>
+      <div class="form-group"><label class="form-label">客戶名稱 *</label><input type="text" class="form-input" id="qName" placeholder="例：大雅社區復健中心"></div>
+      <div class="form-group"><label class="form-label">統一編號</label><input type="text" class="form-input" id="qTaxId" placeholder="可空白"></div>
+      <div class="form-group"><label class="form-label">聯絡人</label><input type="text" class="form-input" id="qContact" placeholder="例：游惠雯小姐"></div>
+      <div class="form-group"><label class="form-label">電話</label><input type="tel" class="form-input" id="qPhone"></div>
+      <div class="form-group"><label class="form-label">地址</label><input type="text" class="form-input" id="qAddr"></div>
+      <div class="form-group"><label class="form-label">工程名稱 *</label>
+        <select class="form-input" id="qProject" style="margin-bottom:6px;">
+          <option>水電工程</option><option>消防缺失改善</option><option>消防檢修申報</option>
+          <option>冷氣空調</option><option>水管疏通</option><option>家電維修</option>
+          <option>油漆粉刷</option><option>木工裝潢</option><option>裝潢統包</option>
+          <option>拆除清運</option><option>天花板改善</option><option>外牆裝飾</option>
+          <option>其他</option>
+        </select>
+        <input type="text" class="form-input" id="qProjectCustom" placeholder="（選「其他」時自訂）">
+      </div>
+
+      <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:8px 10px;border-radius:6px;margin:14px 0 8px;">
+        <div style="font-size:11px;color:#92400e;font-weight:600;">📋 項目明細（可多項）</div>
+      </div>
+      <div id="quoteItems"></div>
+      <button class="btn secondary" onclick="addQuoteItem()" style="margin-top:4px;">➕ 加一項</button>
+
+      <div style="background:#f0fdf4;border-left:3px solid #10b981;padding:10px;border-radius:6px;margin:12px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span>未稅小計</span><span id="qSubtotal">NT$ 0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;color:#666;">
+          <span>5% 稅金</span><span id="qTax">NT$ 0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;color:#0c2340;border-top:1px solid #d1fae5;padding-top:6px;">
+          <span>合 計</span><span id="qTotal">NT$ 0</span>
+        </div>
+      </div>
+
+      <button class="btn" onclick="generateQuote()">🚀 下指令產 PDF（30 秒寄回 Telegram）</button>
       <button class="btn secondary" onclick="showPage('home')">取消</button>
+
+      <p style="font-size:11px;color:#888;margin-top:10px;text-align:center;">桌機 Worker 自動產 PDF + 寄回 Telegram</p>
     </div>
   </div>
 
@@ -347,6 +377,9 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === name));
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (name === 'home') refreshCmdList();
+  if (name === 'quote' && document.getElementById('quoteItems').children.length === 0) {
+    addQuoteItem(); // 進入報價頁自動加第一項
+  }
 }
 
 function toast(msg) {
@@ -395,25 +428,129 @@ async function cmd(type) {
   setTimeout(refreshCmdList, 1000);
 }
 
-// ========= 報價 =========
+// ========= 報價（多項目版）=========
+let quoteItemId = 0;
+
+function addQuoteItem(preset) {
+  quoteItemId++;
+  const id = quoteItemId;
+  const wrap = document.createElement('div');
+  wrap.className = 'quote-item';
+  wrap.id = 'qi_' + id;
+  wrap.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;margin-bottom:8px;';
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:11px;color:#888;font-weight:600;">項 ${id}</span>
+      <button onclick="removeQuoteItem(${id})" style="background:none;border:none;color:#ef4444;font-size:13px;cursor:pointer;">✕ 刪除</button>
+    </div>
+    <input type="text" class="form-input qi-name" placeholder="品名規格（如：屋頂電盤斷路器更換60A3P）" style="margin-bottom:6px;font-size:13px;padding:8px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;">
+      <input type="number" class="form-input qi-qty" placeholder="數量" style="font-size:13px;padding:8px;" onchange="updateQuoteTotals()" oninput="updateQuoteTotals()">
+      <input type="text" class="form-input qi-unit" placeholder="單位" style="font-size:13px;padding:8px;" value="式">
+      <input type="number" class="form-input qi-price" placeholder="單價" style="font-size:13px;padding:8px;" onchange="updateQuoteTotals()" oninput="updateQuoteTotals()">
+    </div>
+    <input type="text" class="form-input qi-note" placeholder="備註（如：士林電機，可空白）" style="font-size:12px;padding:7px;">
+  `;
+  document.getElementById('quoteItems').appendChild(wrap);
+  if (preset) {
+    wrap.querySelector('.qi-name').value = preset.name || '';
+    wrap.querySelector('.qi-qty').value = preset.qty || '';
+    wrap.querySelector('.qi-unit').value = preset.unit || '式';
+    wrap.querySelector('.qi-price').value = preset.price || '';
+    wrap.querySelector('.qi-note').value = preset.note || '';
+  }
+  updateQuoteTotals();
+}
+
+function removeQuoteItem(id) {
+  const el = document.getElementById('qi_' + id);
+  if (el) el.remove();
+  updateQuoteTotals();
+}
+
+function updateQuoteTotals() {
+  let subtotal = 0;
+  document.querySelectorAll('.quote-item').forEach(el => {
+    const qty = parseFloat(el.querySelector('.qi-qty').value || 0);
+    const price = parseFloat(el.querySelector('.qi-price').value || 0);
+    subtotal += Math.round(qty * price);
+  });
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + tax;
+  document.getElementById('qSubtotal').textContent = 'NT$ ' + subtotal.toLocaleString();
+  document.getElementById('qTax').textContent = 'NT$ ' + tax.toLocaleString();
+  document.getElementById('qTotal').textContent = 'NT$ ' + total.toLocaleString();
+}
+
 async function generateQuote() {
+  const name = document.getElementById('qName').value.trim();
+  if (!name) { toast('⚠️ 填客戶名稱'); return; }
+
+  const items = [];
+  document.querySelectorAll('.quote-item').forEach(el => {
+    const itemName = el.querySelector('.qi-name').value.trim();
+    const qty = parseFloat(el.querySelector('.qi-qty').value || 0);
+    const price = parseFloat(el.querySelector('.qi-price').value || 0);
+    if (itemName && qty > 0 && price > 0) {
+      items.push({
+        name: itemName, qty: qty,
+        unit: el.querySelector('.qi-unit').value.trim() || '式',
+        price: price,
+        note: el.querySelector('.qi-note').value.trim(),
+      });
+    }
+  });
+  if (items.length === 0) { toast('⚠️ 至少填一個項目（品名+數量+單價）'); return; }
+
+  let subtotal = 0;
+  items.forEach(it => subtotal += Math.round(it.qty * it.price));
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + tax;
+
+  const projectCustom = document.getElementById('qProjectCustom').value.trim();
+  const project = projectCustom || document.getElementById('qProject').value;
+
   const data = {
-    customer_name: document.getElementById('qName').value,
-    customer_phone: document.getElementById('qPhone').value,
-    service_category: document.getElementById('qCategory').value,
-    description: document.getElementById('qDesc').value,
-    amount: parseInt(document.getElementById('qPrice').value || 0),
     quote_number: 'LS-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*900+100),
-    valid_until: new Date(Date.now() + 3*86400000).toISOString().slice(0,10),
+    project_name: project,
+    customer_name: name,
+    customer_tax_id: document.getElementById('qTaxId').value.trim(),
+    customer_contact: document.getElementById('qContact').value.trim(),
+    customer_phone: document.getElementById('qPhone').value.trim(),
+    customer_address: document.getElementById('qAddr').value.trim(),
+    supervisor: '林逸霆',
+    agent: '林逸霆',
+    items: items,
+    subtotal: subtotal,
+    tax: tax,
+    amount: total,
+    tax_rate: 0.05,
+    valid_days: 7,
+    deposit_pct: 30,
   };
-  if (!data.customer_name || !data.amount) { toast('⚠️ 填客戶名+金額'); return; }
+
   const s = getS();
   if (s.supabaseKey) {
-    try { await fetch(`${s.supabaseUrl}/rest/v1/quick_quotes`, { method: 'POST', headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (e) {}
+    try {
+      await fetch(`${s.supabaseUrl}/rest/v1/quick_quotes`, {
+        method: 'POST',
+        headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quote_number: data.quote_number,
+          customer_name: name,
+          service_category: project,
+          amount: total,
+        }),
+      });
+    } catch (e) {}
   }
-  await sendCommand('quote', data, `編號 ${data.quote_number}\n${data.customer_name} - NT$${data.amount.toLocaleString()}`);
+
+  const preview = `📄 ${data.quote_number}\n${name} - ${project}\n${items.length} 項 ‧ NT$ ${total.toLocaleString()}`;
+  await sendCommand('quote', data, preview);
   toast('✅ 指令下達，桌機產 PDF 中...');
-  ['qName','qPhone','qDesc','qPrice'].forEach(i => document.getElementById(i).value = '');
+  ['qName','qTaxId','qContact','qPhone','qAddr','qProjectCustom'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('quoteItems').innerHTML = '';
+  updateQuoteTotals();
   showPage('home');
 }
 
