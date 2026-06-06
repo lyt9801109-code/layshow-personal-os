@@ -1,0 +1,21 @@
+{
+  "name": "副官生圖工坊",
+  "short_name": "生圖工坊",
+  "start_url": "image_studio.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A2540",
+  "theme_color": "#0A2540",
+  "icons": [
+    {
+      "src": "icon-pool-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-pool-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
