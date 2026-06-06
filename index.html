@@ -94,6 +94,57 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 .tag-list { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .tag { background: var(--bg); padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; border: 1px solid var(--border); }
 .tag:active { background: var(--primary); color: white; }
+
+/* ====== ZONE (calendar/expense/mileage) ====== */
+.zmodal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; justify-content: center; z-index: 300; }
+.zmodal.show { display: flex; animation: zfade 0.2s; }
+@keyframes zfade { from { opacity: 0; } to { opacity: 1; } }
+.zmodal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; animation: zslideUp 0.3s; position: relative; }
+@keyframes zslideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.zmodal-content h3 { font-size: 18px; font-weight: 800; margin-bottom: 14px; color: var(--dark); }
+.zmodal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
+
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
+.cat-btn { padding: 8px 4px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; background: white; }
+.cat-btn.active { border-color: var(--primary); background: #fff7ed; }
+.cat-btn .emoji { font-size: 22px; display: block; }
+.cat-btn .name { font-size: 10px; color: var(--dark); margin-top: 2px; font-weight: 600; }
+
+.zevent { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; gap: 10px; cursor: pointer; }
+.zevent.work { border-left: 4px solid var(--primary); }
+.zevent.customer { border-left: 4px solid #3b82f6; }
+.zevent.b2b { border-left: 4px solid #8b5cf6; }
+.zevent.personal { border-left: 4px solid var(--success); }
+.zevent.family { border-left: 4px solid #ec4899; }
+.zevent.health { border-left: 4px solid #f59e0b; }
+.zevent-time { font-size: 11px; color: var(--text-muted); min-width: 50px; text-align: center; padding-top: 2px; }
+.zevent-time .hour { font-size: 14px; font-weight: 800; color: var(--dark); }
+.zevent-info { flex: 1; min-width: 0; }
+.zevent-title { font-size: 14px; font-weight: 700; color: var(--dark); }
+.zevent-loc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.zevent-acts { display: flex; gap: 4px; flex-shrink: 0; }
+.zevent-act { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 13px; }
+.zevent-act.done { background: var(--success); color: white; border: none; }
+.zevent-act.del { background: #fee2e2; color: var(--danger); border: none; }
+
+.zexp { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: white; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; cursor: pointer; }
+.zexp-info { flex: 1; min-width: 0; }
+.zexp-cat { font-size: 12px; font-weight: 700; color: var(--dark); }
+.zexp-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.zexp-amount { font-size: 16px; font-weight: 800; color: var(--danger); flex-shrink: 0; }
+.zexp-amount.income { color: var(--success); }
+
+.zmile { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 6px; cursor: pointer; }
+.zmile-route { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.zmile-meta { display: flex; justify-content: space-between; align-items: center; }
+.zmile-meta .km { font-size: 18px; font-weight: 900; color: var(--primary); }
+.zmile-meta .purpose { font-size: 11px; color: var(--text-muted); }
+
+.upcoming { background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid var(--warning); padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; }
+.upcoming .title { font-size: 12px; font-weight: 800; color: #92400e; }
+.upcoming .info { font-size: 11px; color: #78350f; margin-top: 2px; }
+
+.action.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; }
 </style>
 </head>
 <body>
@@ -119,16 +170,11 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     </div>
 
     <div class="section-title">⚡ ZONE 個人作戰</div>
-    <a href="zone.html" style="text-decoration:none;display:block;background:linear-gradient(135deg,#0c2340,#1a4a8a);color:white;padding:18px;border-radius:14px;margin-bottom:14px;box-shadow:0 4px 12px rgba(12,35,64,0.3);">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <span style="font-size:36px;">⚡</span>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:800;">ZONE — 行事曆 / 記帳 / 里程</div>
-          <div style="font-size:11px;opacity:0.85;margin-top:2px;">個人作戰 + 提醒 + 統計</div>
-        </div>
-        <span style="font-size:24px;">→</span>
-      </div>
-    </a>
+    <div class="grid grid-3" style="margin-bottom:14px;">
+      <div class="action dark" onclick="showPage('calendar')"><span class="emoji">📅</span><div class="name">行程</div></div>
+      <div class="action success" onclick="showPage('expense')"><span class="emoji">💰</span><div class="name">記帳</div></div>
+      <div class="action blue" onclick="showPage('mileage')"><span class="emoji">🚗</span><div class="name">里程</div></div>
+    </div>
 
     <div class="section-title">🎯 爬蟲待留言</div>
     <div onclick="triggerBatchReply()" id="batchReplyBtn" style="background:linear-gradient(135deg,#ef4444,#f97316);color:white;padding:18px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
@@ -153,7 +199,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <div class="action" onclick="cmd('reels_now')"><span class="emoji">🎬</span><div class="name">發 Reels</div></div>
       <div class="action" onclick="cmd('report')"><span class="emoji">📈</span><div class="name">日報</div></div>
       <div class="action" onclick="cmd('crawler_status')"><span class="emoji">🤖</span><div class="name">爬蟲</div></div>
-      <div class="action" onclick="openCalendar()"><span class="emoji">📅</span><div class="name">行事曆</div></div>
+      <div class="action" onclick="showPage('calendar')"><span class="emoji">📅</span><div class="name">行事曆</div></div>
     </div>
 
     <div class="section-title">📨 即時指令動態（自動更新）</div>
@@ -312,18 +358,62 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     </div>
   </div>
 
-  <!-- 行事曆 -->
+  <!-- ===== ZONE 行事曆 ===== -->
   <div class="page" id="page-calendar">
+    <div id="upcomingArea"></div>
+    <button class="btn" onclick="openEventModal()" style="background:linear-gradient(135deg,#F37021,#e11d48);font-weight:800;">➕ 新增行程 / 提醒</button>
+    <button class="btn secondary" onclick="openCalendar()" style="margin-top:6px;">📅 開 Google Calendar</button>
+
+    <div class="card" style="margin-top:14px;">
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">📅 今日 <span id="todayCount" style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;">0</span></h3>
+      <div id="eventsToday"></div>
+    </div>
     <div class="card">
-      <h2 style="margin-bottom: 16px;">📅 行程管理</h2>
-      <div class="form-group"><label class="form-label">事件名稱</label><input type="text" class="form-input" id="calTitle" placeholder="王先生 - 冷氣維修"></div>
-      <div class="form-group"><label class="form-label">日期</label><input type="date" class="form-input" id="calDate"></div>
-      <div class="form-group"><label class="form-label">時間</label><input type="time" class="form-input" id="calTime"></div>
-      <div class="form-group"><label class="form-label">地點</label><input type="text" class="form-input" id="calLoc" placeholder="台中市西屯區..."></div>
-      <div class="form-group"><label class="form-label">說明</label><textarea class="form-textarea" id="calDesc"></textarea></div>
-      <button class="btn" onclick="createCalEvent()">📅 開 Calendar 建事件（自動帶入）</button>
-      <button class="btn dark" onclick="openCalendar()" style="margin-top: 8px;">📅 開 Google Calendar</button>
-      <button class="btn secondary" onclick="showPage('home')">回首頁</button>
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">📆 未來 7 天 <span id="weekCount" style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;">0</span></h3>
+      <div id="eventsWeek"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">✅ 已完成 <span id="doneCount" style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;">0</span></h3>
+      <div id="eventsDone"></div>
+    </div>
+  </div>
+
+  <!-- ===== ZONE 記帳 ===== -->
+  <div class="page" id="page-expense">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px;">
+      <div style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:10px;opacity:0.85;">本月支出</div><div style="font-size:20px;font-weight:900;margin-top:2px;" id="monthExpense">$0</div></div>
+      <div style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:10px;opacity:0.85;">本月收入</div><div style="font-size:20px;font-weight:900;margin-top:2px;" id="monthIncome">$0</div></div>
+    </div>
+    <div style="background:linear-gradient(135deg,#8b5cf6,#6366f1);color:white;padding:12px;border-radius:12px;text-align:center;margin-bottom:12px;"><div style="font-size:10px;opacity:0.85;">本月淨利</div><div style="font-size:22px;font-weight:900;margin-top:2px;" id="monthNet">$0</div></div>
+
+    <button class="btn" onclick="openExpenseModal()" style="background:linear-gradient(135deg,#F37021,#e11d48);font-weight:800;">➕ 快速記帳</button>
+
+    <div class="card" style="margin-top:14px;">
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">📊 本月分類</h3>
+      <div id="categoryStats"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">📋 最近 30 筆 <span id="expenseCount" style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;">0</span></h3>
+      <div id="expenseList"></div>
+    </div>
+  </div>
+
+  <!-- ===== ZONE 里程 ===== -->
+  <div class="page" id="page-mileage">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;">
+      <div style="background:linear-gradient(135deg,#0c2340,#1a4a8a);color:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:10px;opacity:0.85;">今日里程</div><div style="font-size:20px;font-weight:900;margin-top:2px;" id="todayKm">0 km</div></div>
+      <div style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:10px;opacity:0.85;">本月里程</div><div style="font-size:20px;font-weight:900;margin-top:2px;" id="monthKm">0 km</div></div>
+    </div>
+
+    <button class="btn" onclick="openMileageModal()" style="background:linear-gradient(135deg,#F37021,#e11d48);font-weight:800;">➕ 新增行程里程</button>
+
+    <div class="card" style="margin-top:14px;">
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">🚗 本月各用途</h3>
+      <div id="mileagePurposes"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">📋 最近 30 趟 <span id="mileageCount" style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;">0</span></h3>
+      <div id="mileageList"></div>
     </div>
   </div>
 
@@ -351,11 +441,123 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   </div>
 </div>
 
+<!-- ===== ZONE Modals ===== -->
+<div class="zmodal" id="eventModal">
+  <div class="zmodal-content">
+    <button class="zmodal-close" onclick="closeZModal('eventModal')">✕</button>
+    <h3 id="eventModalTitle">➕ 新增行程</h3>
+    <input type="hidden" id="eventId">
+    <div class="form-group"><label class="form-label">類別</label>
+      <div class="cat-grid" id="eventCatGrid">
+        <div class="cat-btn" data-val="work" onclick="selectCat(this,'event')"><span class="emoji">🔧</span><div class="name">工程</div></div>
+        <div class="cat-btn" data-val="customer" onclick="selectCat(this,'event')"><span class="emoji">👤</span><div class="name">客戶</div></div>
+        <div class="cat-btn" data-val="b2b" onclick="selectCat(this,'event')"><span class="emoji">🏢</span><div class="name">B2B</div></div>
+        <div class="cat-btn" data-val="personal" onclick="selectCat(this,'event')"><span class="emoji">📝</span><div class="name">個人</div></div>
+        <div class="cat-btn" data-val="family" onclick="selectCat(this,'event')"><span class="emoji">👨‍👩‍👧</span><div class="name">家人</div></div>
+        <div class="cat-btn" data-val="health" onclick="selectCat(this,'event')"><span class="emoji">💪</span><div class="name">健康</div></div>
+        <div class="cat-btn active" data-val="general" onclick="selectCat(this,'event')"><span class="emoji">📌</span><div class="name">一般</div></div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">事件名稱 *</label><input class="form-input" id="eventTitle" placeholder="例：王太太冷氣維修"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-group"><label class="form-label">日期 *</label><input type="date" class="form-input" id="eventDate"></div>
+      <div class="form-group"><label class="form-label">時間</label><input type="time" class="form-input" id="eventTime"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-group"><label class="form-label">時長（分鐘）</label><input type="number" class="form-input" id="eventDuration" value="60"></div>
+      <div class="form-group"><label class="form-label">提前提醒</label>
+        <select class="form-input" id="eventRemind">
+          <option value="0">不提醒</option><option value="10">10 分前</option><option value="30" selected>30 分前</option>
+          <option value="60">1 小時前</option><option value="120">2 小時前</option><option value="1440">1 天前</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">地點</label><input class="form-input" id="eventLocation"></div>
+    <div class="form-group"><label class="form-label">客戶名</label><input class="form-input" id="eventCustomer"></div>
+    <div class="form-group"><label class="form-label">客戶電話</label><input class="form-input" id="eventPhone"></div>
+    <div class="form-group"><label class="form-label">備註</label><textarea class="form-textarea" id="eventNote"></textarea></div>
+    <button class="btn" onclick="saveEvent()" style="background:linear-gradient(135deg,#F37021,#e11d48);">💾 儲存</button>
+    <button class="btn secondary" onclick="closeZModal('eventModal')" style="margin-top:6px;">取消</button>
+  </div>
+</div>
+
+<div class="zmodal" id="expenseModal">
+  <div class="zmodal-content">
+    <button class="zmodal-close" onclick="closeZModal('expenseModal')">✕</button>
+    <h3>💰 快速記帳</h3>
+    <div class="form-group"><label class="form-label">類型</label>
+      <div style="display:flex;gap:6px;">
+        <button class="btn dark" style="flex:1;" id="typeExpenseBtn" onclick="setExpType('expense')">💸 支出</button>
+        <button class="btn secondary" style="flex:1;" id="typeIncomeBtn" onclick="setExpType('income')">💚 收入</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">金額 *</label><input type="number" class="form-input" id="expAmount" placeholder="0" style="font-size:24px;font-weight:800;text-align:center;"></div>
+    <div class="form-group"><label class="form-label">分類</label>
+      <div class="cat-grid" id="expCatGrid">
+        <div class="cat-btn active" data-val="油錢" onclick="selectCat(this,'exp')"><span class="emoji">⛽</span><div class="name">油錢</div></div>
+        <div class="cat-btn" data-val="材料" onclick="selectCat(this,'exp')"><span class="emoji">🔩</span><div class="name">材料</div></div>
+        <div class="cat-btn" data-val="工具" onclick="selectCat(this,'exp')"><span class="emoji">🛠️</span><div class="name">工具</div></div>
+        <div class="cat-btn" data-val="工資" onclick="selectCat(this,'exp')"><span class="emoji">💵</span><div class="name">工資</div></div>
+        <div class="cat-btn" data-val="食物" onclick="selectCat(this,'exp')"><span class="emoji">🍱</span><div class="name">食物</div></div>
+        <div class="cat-btn" data-val="設備" onclick="selectCat(this,'exp')"><span class="emoji">📱</span><div class="name">設備</div></div>
+        <div class="cat-btn" data-val="B2B" onclick="selectCat(this,'exp')"><span class="emoji">🏢</span><div class="name">B2B</div></div>
+        <div class="cat-btn" data-val="雜支" onclick="selectCat(this,'exp')"><span class="emoji">📦</span><div class="name">雜支</div></div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">說明</label><input class="form-input" id="expDesc"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-group"><label class="form-label">日期</label><input type="date" class="form-input" id="expDate"></div>
+      <div class="form-group"><label class="form-label">付款</label>
+        <select class="form-input" id="expPayment"><option>現金</option><option>信用卡</option><option>LINE Pay</option><option>轉帳</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">客戶/工程</label><input class="form-input" id="expProject"></div>
+    <div class="form-group"><label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="expTax"> 可抵稅</label></div>
+    <button class="btn" onclick="saveExpense()" style="background:linear-gradient(135deg,#F37021,#e11d48);">💾 儲存</button>
+    <button class="btn secondary" onclick="closeZModal('expenseModal')" style="margin-top:6px;">取消</button>
+  </div>
+</div>
+
+<div class="zmodal" id="mileageModal">
+  <div class="zmodal-content">
+    <button class="zmodal-close" onclick="closeZModal('mileageModal')">✕</button>
+    <h3>🚗 新增行程里程</h3>
+    <div class="form-group"><label class="form-label">用途</label>
+      <div class="cat-grid" id="purposeCatGrid">
+        <div class="cat-btn active" data-val="工程" onclick="selectCat(this,'purpose')"><span class="emoji">🔧</span><div class="name">工程</div></div>
+        <div class="cat-btn" data-val="拜訪客戶" onclick="selectCat(this,'purpose')"><span class="emoji">👤</span><div class="name">客戶</div></div>
+        <div class="cat-btn" data-val="採購材料" onclick="selectCat(this,'purpose')"><span class="emoji">📦</span><div class="name">採購</div></div>
+        <div class="cat-btn" data-val="B2B" onclick="selectCat(this,'purpose')"><span class="emoji">🏢</span><div class="name">B2B</div></div>
+        <div class="cat-btn" data-val="個人" onclick="selectCat(this,'purpose')"><span class="emoji">📝</span><div class="name">個人</div></div>
+        <div class="cat-btn" data-val="家人" onclick="selectCat(this,'purpose')"><span class="emoji">👨‍👩‍👧</span><div class="name">家人</div></div>
+        <div class="cat-btn" data-val="其他" onclick="selectCat(this,'purpose')"><span class="emoji">📌</span><div class="name">其他</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-group"><label class="form-label">起點</label><input class="form-input" id="mStart"></div>
+      <div class="form-group"><label class="form-label">終點</label><input class="form-input" id="mEnd"></div>
+    </div>
+    <div class="form-group"><label class="form-label">公里數 *</label><input type="number" step="0.1" class="form-input" id="mKm" style="font-size:24px;font-weight:800;text-align:center;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-group"><label class="form-label">日期</label><input type="date" class="form-input" id="mDate"></div>
+      <div class="form-group"><label class="form-label">客戶</label><input class="form-input" id="mCustomer"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+      <div class="form-group"><label class="form-label">油錢</label><input type="number" class="form-input" id="mFuel"></div>
+      <div class="form-group"><label class="form-label">過路費</label><input type="number" class="form-input" id="mToll"></div>
+      <div class="form-group"><label class="form-label">停車</label><input type="number" class="form-input" id="mPark"></div>
+    </div>
+    <div class="form-group"><label class="form-label">備註</label><input class="form-input" id="mNote"></div>
+    <button class="btn" onclick="saveMileage()" style="background:linear-gradient(135deg,#F37021,#e11d48);">💾 儲存</button>
+    <button class="btn secondary" onclick="closeZModal('mileageModal')" style="margin-top:6px;">取消</button>
+  </div>
+</div>
+
 <div class="bottom-nav">
   <a class="nav-item active" data-page="home" onclick="showPage('home')"><span class="icon">🏠</span>首頁</a>
-  <a class="nav-item" data-page="quote" onclick="showPage('quote')"><span class="icon">💰</span>報價</a>
-  <a class="nav-item" data-page="customer" onclick="showPage('customer')"><span class="icon">👥</span>客戶</a>
   <a class="nav-item" data-page="calendar" onclick="showPage('calendar')"><span class="icon">📅</span>行程</a>
+  <a class="nav-item" data-page="expense" onclick="showPage('expense')"><span class="icon">💰</span>記帳</a>
+  <a class="nav-item" data-page="mileage" onclick="showPage('mileage')"><span class="icon">🚗</span>里程</a>
   <a class="nav-item" data-page="settings" onclick="showPage('settings')"><span class="icon">⚙️</span>設定</a>
 </div>
 
@@ -410,8 +612,361 @@ function showPage(name) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (name === 'home') refreshCmdList();
   if (name === 'quote' && document.getElementById('quoteItems').children.length === 0) {
-    addQuoteItem(); // 進入報價頁自動加第一項
+    addQuoteItem();
   }
+  // ZONE pages
+  if (name === 'calendar') loadEvents();
+  else if (name === 'expense') loadExpenses();
+  else if (name === 'mileage') loadMileage();
+}
+
+// ============ ZONE: 共用 ============
+let ZSELECTED = { event: 'general', exp: '油錢', purpose: '工程' };
+let ZCURRENT_EXP_TYPE = 'expense';
+
+function getSupabaseHeaders() {
+  const s = getS();
+  return { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json' };
+}
+
+function selectCat(el, group) {
+  const grid = el.closest('.cat-grid');
+  grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  ZSELECTED[group] = el.dataset.val;
+}
+
+function closeZModal(id) { document.getElementById(id).classList.remove('show'); }
+function zescapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function zformatDate(d) { if (!d) return ''; const dt = new Date(d); return (dt.getMonth() + 1) + '/' + dt.getDate(); }
+
+// ============ ZONE: 行事曆 ============
+function openEventModal(event) {
+  document.getElementById('eventModal').classList.add('show');
+  if (event && typeof event === 'object' && event.id) {
+    document.getElementById('eventModalTitle').textContent = '✏️ 編輯行程';
+    document.getElementById('eventId').value = event.id;
+    document.getElementById('eventTitle').value = event.title || '';
+    document.getElementById('eventDate').value = event.event_date || '';
+    document.getElementById('eventTime').value = event.event_time || '';
+    document.getElementById('eventDuration').value = event.duration_minutes || 60;
+    document.getElementById('eventRemind').value = event.remind_minutes_before || 30;
+    document.getElementById('eventLocation').value = event.location || '';
+    document.getElementById('eventCustomer').value = event.customer_name || '';
+    document.getElementById('eventPhone').value = event.customer_phone || '';
+    document.getElementById('eventNote').value = event.note || '';
+    ZSELECTED.event = event.category || 'general';
+    document.querySelectorAll('#eventCatGrid .cat-btn').forEach(b => b.classList.toggle('active', b.dataset.val === ZSELECTED.event));
+  } else {
+    document.getElementById('eventModalTitle').textContent = '➕ 新增行程';
+    document.getElementById('eventId').value = '';
+    document.getElementById('eventDate').value = new Date().toISOString().slice(0, 10);
+    ['eventTime','eventTitle','eventLocation','eventCustomer','eventPhone','eventNote'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('eventDuration').value = 60;
+    document.getElementById('eventRemind').value = 30;
+    ZSELECTED.event = 'general';
+    document.querySelectorAll('#eventCatGrid .cat-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'general'));
+  }
+}
+
+async function saveEvent() {
+  const title = document.getElementById('eventTitle').value.trim();
+  const date = document.getElementById('eventDate').value;
+  if (!title || !date) { toast('⚠️ 填事件名 + 日期'); return; }
+  const data = {
+    title, event_date: date,
+    event_time: document.getElementById('eventTime').value || null,
+    duration_minutes: parseInt(document.getElementById('eventDuration').value || 60),
+    remind_minutes_before: parseInt(document.getElementById('eventRemind').value || 0),
+    location: document.getElementById('eventLocation').value.trim(),
+    customer_name: document.getElementById('eventCustomer').value.trim(),
+    customer_phone: document.getElementById('eventPhone').value.trim(),
+    note: document.getElementById('eventNote').value.trim(),
+    category: ZSELECTED.event,
+  };
+  const id = document.getElementById('eventId').value;
+  try {
+    const s = getS();
+    const url = id
+      ? `${s.supabaseUrl}/rest/v1/personal_events?id=eq.${id}`
+      : `${s.supabaseUrl}/rest/v1/personal_events`;
+    const r = await fetch(url, { method: id ? 'PATCH' : 'POST', headers: getSupabaseHeaders(), body: JSON.stringify(data) });
+    if (r.ok) { toast(id ? '✅ 已更新' : '✅ 已新增'); closeZModal('eventModal'); loadEvents(); }
+    else toast('❌ 儲存失敗');
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+async function deleteEvent(id, e) {
+  if (e) e.stopPropagation();
+  if (!confirm('確定刪除？')) return;
+  try {
+    const s = getS();
+    await fetch(`${s.supabaseUrl}/rest/v1/personal_events?id=eq.${id}`, { method: 'DELETE', headers: getSupabaseHeaders() });
+    toast('🗑️ 已刪除'); loadEvents();
+  } catch (err) {}
+}
+
+async function markDoneEvent(id, e) {
+  if (e) e.stopPropagation();
+  try {
+    const s = getS();
+    await fetch(`${s.supabaseUrl}/rest/v1/personal_events?id=eq.${id}`, {
+      method: 'PATCH', headers: getSupabaseHeaders(),
+      body: JSON.stringify({ status: 'done' })
+    });
+    toast('✅ 完成'); loadEvents();
+  } catch (err) {}
+}
+
+async function loadEvents() {
+  const s = getS();
+  if (!s.supabaseKey) { toast('⚠️ 請先設定 Supabase Key'); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const last7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/personal_events?order=event_date.asc,event_time.asc&event_date=gte.${last7}&event_date=lte.${weekEnd}`, { headers: getSupabaseHeaders() });
+    if (!r.ok) return;
+    const events = await r.json();
+    const todayList = events.filter(e => e.event_date === today && e.status === 'pending');
+    const weekList = events.filter(e => e.event_date > today && e.event_date <= weekEnd && e.status === 'pending');
+    const doneList = events.filter(e => e.status === 'done').slice(0, 10);
+
+    document.getElementById('todayCount').textContent = todayList.length;
+    document.getElementById('weekCount').textContent = weekList.length;
+    document.getElementById('doneCount').textContent = doneList.length;
+    renderZEvents('eventsToday', todayList, '今天沒有行程');
+    renderZEvents('eventsWeek', weekList, '未來 7 天沒安排');
+    renderZEvents('eventsDone', doneList, '近期沒有已完成的');
+
+    const ua = document.getElementById('upcomingArea');
+    if (ua) {
+      const next = todayList.find(e => e.event_time && e.event_time > new Date().toTimeString().slice(0, 5));
+      if (next) {
+        ua.innerHTML = `<div class="upcoming">
+          <div class="title">⏰ 下一個行程：${zescapeHtml(next.title)}</div>
+          <div class="info">${next.event_time || ''} ‧ ${zescapeHtml(next.location || '無地點')} ${next.remind_minutes_before > 0 ? `‧ 提前 ${next.remind_minutes_before} 分鐘提醒` : ''}</div>
+        </div>`;
+      } else ua.innerHTML = '';
+    }
+    scheduleZLocalReminders(todayList);
+  } catch (e) {}
+}
+
+function renderZEvents(id, list, emptyMsg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!list.length) { el.innerHTML = `<div class="empty"><div style="font-size:32px;">📭</div><div style="font-size:12px;">${emptyMsg}</div></div>`; return; }
+  el.innerHTML = list.map(e => {
+    const hr = e.event_time ? e.event_time.slice(0, 5) : '全天';
+    const cat = e.category || 'general';
+    const dateStr = e.event_date !== new Date().toISOString().slice(0, 10) ? zformatDate(e.event_date) : '';
+    const evData = JSON.stringify(e).replace(/"/g, '&quot;');
+    return `<div class="zevent ${cat}" onclick="openEventModal(${evData})">
+      <div class="zevent-time"><div class="hour">${hr}</div><div style="font-size:10px;">${dateStr}</div></div>
+      <div class="zevent-info">
+        <div class="zevent-title">${zescapeHtml(e.title)}</div>
+        ${e.location ? `<div class="zevent-loc">📍 ${zescapeHtml(e.location)}</div>` : ''}
+        ${e.customer_name ? `<div class="zevent-loc">👤 ${zescapeHtml(e.customer_name)}</div>` : ''}
+      </div>
+      <div class="zevent-acts">
+        ${e.status !== 'done' ? `<button class="zevent-act done" onclick="markDoneEvent('${e.id}', event)">✓</button>` : ''}
+        <button class="zevent-act del" onclick="deleteEvent('${e.id}', event)">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function scheduleZLocalReminders(events) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  events.forEach(e => {
+    if (!e.event_time || e.remind_minutes_before <= 0) return;
+    const [h, m] = e.event_time.split(':').map(Number);
+    const target = new Date(); target.setHours(h, m, 0, 0);
+    const remindAt = new Date(target.getTime() - e.remind_minutes_before * 60000);
+    const now = Date.now();
+    if (remindAt.getTime() > now && remindAt.getTime() - now < 24 * 3600000) {
+      const key = `reminded_${e.id}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+      setTimeout(() => {
+        new Notification(`⏰ ${e.title}`, { body: `${e.event_time.slice(0, 5)} ‧ ${e.location || ''}`, icon: 'icon-192.png', tag: e.id });
+      }, remindAt.getTime() - now);
+    }
+  });
+}
+
+// ============ ZONE: 記帳 ============
+function openExpenseModal() {
+  document.getElementById('expenseModal').classList.add('show');
+  ['expAmount','expDesc','expProject'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('expDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('expTax').checked = false;
+  setExpType('expense');
+}
+
+function setExpType(t) {
+  ZCURRENT_EXP_TYPE = t;
+  document.getElementById('typeExpenseBtn').className = 'btn ' + (t === 'expense' ? 'dark' : 'secondary');
+  document.getElementById('typeIncomeBtn').className = 'btn ' + (t === 'income' ? 'success' : 'secondary');
+  document.getElementById('typeIncomeBtn').style.background = t === 'income' ? '#10b981' : '';
+  document.getElementById('typeIncomeBtn').style.color = t === 'income' ? 'white' : '';
+}
+
+async function saveExpense() {
+  const amount = parseFloat(document.getElementById('expAmount').value || 0);
+  if (amount <= 0) { toast('⚠️ 填金額'); return; }
+  const data = {
+    amount,
+    expense_type: ZCURRENT_EXP_TYPE,
+    category: ZCURRENT_EXP_TYPE === 'income' ? '收入' : ZSELECTED.exp,
+    description: document.getElementById('expDesc').value.trim(),
+    expense_date: document.getElementById('expDate').value || new Date().toISOString().slice(0, 10),
+    payment_method: document.getElementById('expPayment').value,
+    project_name: document.getElementById('expProject').value.trim(),
+    tax_deductible: document.getElementById('expTax').checked,
+  };
+  try {
+    const s = getS();
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/expenses`, { method: 'POST', headers: getSupabaseHeaders(), body: JSON.stringify(data) });
+    if (r.ok) { toast('✅ 已記帳'); closeZModal('expenseModal'); loadExpenses(); }
+    else toast('❌ 儲存失敗');
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+async function loadExpenses() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  const monthStart = new Date(); monthStart.setDate(1);
+  const ms = monthStart.toISOString().slice(0, 10);
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/expenses?order=expense_date.desc,created_at.desc&expense_date=gte.${ms}`, { headers: getSupabaseHeaders() });
+    if (!r.ok) return;
+    const list = await r.json();
+    const expense = list.filter(x => x.expense_type !== 'income').reduce((s, x) => s + parseFloat(x.amount), 0);
+    const income = list.filter(x => x.expense_type === 'income').reduce((s, x) => s + parseFloat(x.amount), 0);
+    document.getElementById('monthExpense').textContent = '$' + Math.round(expense).toLocaleString();
+    document.getElementById('monthIncome').textContent = '$' + Math.round(income).toLocaleString();
+    document.getElementById('monthNet').textContent = '$' + Math.round(income - expense).toLocaleString();
+
+    const byCat = {};
+    list.filter(x => x.expense_type !== 'income').forEach(x => { byCat[x.category] = (byCat[x.category] || 0) + parseFloat(x.amount); });
+    const catEl = document.getElementById('categoryStats');
+    const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+    catEl.innerHTML = sorted.length ? sorted.map(([cat, amt]) => {
+      const pct = expense > 0 ? Math.round(amt / expense * 100) : 0;
+      return `<div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="font-weight:700;">${zescapeHtml(cat)}</span><span>$${amt.toLocaleString()} (${pct}%)</span></div>
+        <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#F37021,#e11d48);"></div></div>
+      </div>`;
+    }).join('') : '<div class="empty" style="padding:16px;"><div style="font-size:12px;">本月還沒記帳</div></div>';
+
+    document.getElementById('expenseCount').textContent = list.length;
+    const lEl = document.getElementById('expenseList');
+    if (list.length === 0) {
+      lEl.innerHTML = '<div class="empty"><div style="font-size:32px;">📭</div><div style="font-size:12px;">本月還沒記帳</div></div>';
+    } else {
+      lEl.innerHTML = list.slice(0, 30).map(x => `<div class="zexp" onclick="deleteExpenseConfirm('${x.id}')">
+        <div class="zexp-info">
+          <div class="zexp-cat">${zescapeHtml(x.category)} ${x.tax_deductible ? '🧾' : ''}</div>
+          <div class="zexp-desc">${zformatDate(x.expense_date)} ‧ ${zescapeHtml(x.description || '')} ${x.project_name ? '‧ ' + zescapeHtml(x.project_name) : ''}</div>
+        </div>
+        <div class="zexp-amount ${x.expense_type === 'income' ? 'income' : ''}">${x.expense_type === 'income' ? '+' : '-'}$${parseFloat(x.amount).toLocaleString()}</div>
+      </div>`).join('');
+    }
+  } catch (e) {}
+}
+
+async function deleteExpenseConfirm(id) {
+  if (!confirm('刪除這筆記帳？')) return;
+  try {
+    const s = getS();
+    await fetch(`${s.supabaseUrl}/rest/v1/expenses?id=eq.${id}`, { method: 'DELETE', headers: getSupabaseHeaders() });
+    toast('🗑️ 已刪除'); loadExpenses();
+  } catch (e) {}
+}
+
+// ============ ZONE: 里程 ============
+function openMileageModal() {
+  document.getElementById('mileageModal').classList.add('show');
+  document.getElementById('mDate').value = new Date().toISOString().slice(0, 10);
+  ['mStart','mEnd','mKm','mCustomer','mFuel','mToll','mPark','mNote'].forEach(i => document.getElementById(i).value = '');
+}
+
+async function saveMileage() {
+  const km = parseFloat(document.getElementById('mKm').value || 0);
+  if (km <= 0) { toast('⚠️ 填公里數'); return; }
+  const data = {
+    trip_date: document.getElementById('mDate').value || new Date().toISOString().slice(0, 10),
+    start_location: document.getElementById('mStart').value.trim(),
+    end_location: document.getElementById('mEnd').value.trim(),
+    distance_km: km,
+    purpose: ZSELECTED.purpose,
+    customer_name: document.getElementById('mCustomer').value.trim(),
+    fuel_cost: parseFloat(document.getElementById('mFuel').value || 0) || null,
+    toll_cost: parseFloat(document.getElementById('mToll').value || 0) || null,
+    parking_cost: parseFloat(document.getElementById('mPark').value || 0) || null,
+    note: document.getElementById('mNote').value.trim(),
+  };
+  try {
+    const s = getS();
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/mileage_logs`, { method: 'POST', headers: getSupabaseHeaders(), body: JSON.stringify(data) });
+    if (r.ok) { toast('✅ 已記錄 ' + km + ' km'); closeZModal('mileageModal'); loadMileage(); }
+    else toast('❌ 儲存失敗');
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+async function loadMileage() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const monthStart = new Date(); monthStart.setDate(1);
+  const ms = monthStart.toISOString().slice(0, 10);
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/mileage_logs?order=trip_date.desc,created_at.desc&trip_date=gte.${ms}`, { headers: getSupabaseHeaders() });
+    if (!r.ok) return;
+    const list = await r.json();
+    const todayKm = list.filter(x => x.trip_date === today).reduce((s, x) => s + parseFloat(x.distance_km || 0), 0);
+    const monthKm = list.reduce((s, x) => s + parseFloat(x.distance_km || 0), 0);
+    document.getElementById('todayKm').textContent = todayKm.toFixed(1) + ' km';
+    document.getElementById('monthKm').textContent = monthKm.toFixed(0) + ' km';
+
+    const byPurpose = {};
+    list.forEach(x => { byPurpose[x.purpose || '其他'] = (byPurpose[x.purpose || '其他'] || 0) + parseFloat(x.distance_km || 0); });
+    const pEl = document.getElementById('mileagePurposes');
+    const sorted = Object.entries(byPurpose).sort((a, b) => b[1] - a[1]);
+    pEl.innerHTML = sorted.length ? sorted.map(([p, k]) => {
+      const pct = monthKm > 0 ? Math.round(k / monthKm * 100) : 0;
+      return `<div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="font-weight:700;">${zescapeHtml(p)}</span><span>${k.toFixed(1)} km (${pct}%)</span></div>
+        <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);"></div></div>
+      </div>`;
+    }).join('') : '<div class="empty" style="padding:16px;"><div style="font-size:12px;">本月還沒記錄</div></div>';
+
+    document.getElementById('mileageCount').textContent = list.length;
+    const lEl = document.getElementById('mileageList');
+    if (list.length === 0) {
+      lEl.innerHTML = '<div class="empty"><div style="font-size:32px;">🚗</div><div style="font-size:12px;">本月還沒記錄</div></div>';
+    } else {
+      lEl.innerHTML = list.slice(0, 30).map(x => `<div class="zmile" onclick="deleteMileageConfirm('${x.id}')">
+        <div class="zmile-route">${zescapeHtml(x.start_location || '?')} → ${zescapeHtml(x.end_location || '?')}</div>
+        <div class="zmile-meta">
+          <div><span class="purpose">${zformatDate(x.trip_date)} ‧ ${zescapeHtml(x.purpose || '')}</span>${x.customer_name ? `<div style="font-size:10px;color:#666;">${zescapeHtml(x.customer_name)}</div>` : ''}</div>
+          <div class="km">${parseFloat(x.distance_km).toFixed(1)} km</div>
+        </div>
+        ${(x.fuel_cost || x.toll_cost || x.parking_cost) ? `<div style="font-size:10px;color:#888;margin-top:4px;">${[x.fuel_cost ? `油 $${x.fuel_cost}` : '', x.toll_cost ? `路 $${x.toll_cost}` : '', x.parking_cost ? `停 $${x.parking_cost}` : ''].filter(s => s).join(' ‧ ')}</div>` : ''}
+      </div>`).join('');
+    }
+  } catch (e) {}
+}
+
+async function deleteMileageConfirm(id) {
+  if (!confirm('刪除這筆里程？')) return;
+  try {
+    const s = getS();
+    await fetch(`${s.supabaseUrl}/rest/v1/mileage_logs?id=eq.${id}`, { method: 'DELETE', headers: getSupabaseHeaders() });
+    toast('🗑️ 已刪除'); loadMileage();
+  } catch (e) {}
 }
 
 function toast(msg) {
@@ -997,6 +1552,11 @@ loadSettings();
 updateGreet();
 updateStats();
 refreshCmdList();
+
+// 請求通知權限（ZONE 行程提醒用）
+if ('Notification' in window && Notification.permission === 'default') {
+  setTimeout(() => Notification.requestPermission(), 3000);
+}
 
 // 每 5 秒同步指令動態（多設備即時同步）
 setInterval(() => {
