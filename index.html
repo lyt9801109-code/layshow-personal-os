@@ -145,6 +145,57 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 .upcoming .info { font-size: 11px; color: #78350f; margin-top: 2px; }
 
 .action.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; }
+
+/* ====== 副官晨報儀表板 ====== */
+.commander {
+  background: linear-gradient(135deg, #0c2340 0%, #1a4a8a 50%, #6366f1 100%);
+  color: white; border-radius: 18px; padding: 16px; margin-bottom: 14px;
+  position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(12,35,64,0.25);
+}
+.commander::before {
+  content: ''; position: absolute; top: -40px; right: -40px; width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(243,112,33,0.4) 0%, transparent 70%); border-radius: 50%;
+}
+.cmd-greeting { font-size: 13px; opacity: 0.85; }
+.cmd-title { font-size: 18px; font-weight: 800; margin: 2px 0 12px; }
+.cmd-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; position: relative; }
+.cmd-stat { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 10px 6px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.cmd-stat:active { transform: scale(0.96); }
+.cmd-stat.urgent { background: rgba(239,68,68,0.35); animation: cmdPulse 1.5s infinite; }
+@keyframes cmdPulse { 0%,100% { box-shadow: 0 0 0 rgba(239,68,68,0); } 50% { box-shadow: 0 0 12px rgba(239,68,68,0.6); } }
+.cmd-stat .num { font-size: 22px; font-weight: 900; line-height: 1; }
+.cmd-stat .lbl { font-size: 10px; opacity: 0.85; margin-top: 3px; }
+.cmd-stat .ic { font-size: 14px; }
+
+.commander-chat {
+  background: linear-gradient(135deg, #F37021, #e11d48); color: white;
+  padding: 14px 16px; border-radius: 14px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(243,112,33,0.35);
+}
+.commander-chat:active { transform: scale(0.98); }
+.commander-chat .av { font-size: 32px; }
+.commander-chat .txt { flex: 1; }
+.commander-chat .ti { font-size: 14px; font-weight: 800; }
+.commander-chat .sb { font-size: 11px; opacity: 0.9; margin-top: 1px; }
+.commander-chat .arr { font-size: 20px; }
+
+/* ====== 急迫待辦 ====== */
+.urgent-card {
+  background: white; border-left: 4px solid var(--danger); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.urgent-card:active { transform: scale(0.98); }
+.urgent-card.warning { border-left-color: var(--warning); }
+.urgent-card.info { border-left-color: var(--info); }
+.urgent-card .ic { font-size: 24px; }
+.urgent-card .body { flex: 1; }
+.urgent-card .tt { font-size: 13px; font-weight: 700; color: var(--dark); }
+.urgent-card .sb { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.urgent-card .cnt { font-size: 18px; font-weight: 900; color: var(--danger); padding: 2px 8px; background: #fee2e2; border-radius: 12px; }
+.urgent-card.warning .cnt { color: var(--warning); background: #fef3c7; }
+.urgent-card.info .cnt { color: var(--info); background: #dbeafe; }
 </style>
 </head>
 <body>
@@ -161,6 +212,58 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   </div>
 
   <div class="page active" id="page-home">
+
+    <!-- ====== 副官晨報儀表板 ====== -->
+    <div class="commander">
+      <div class="cmd-greeting" id="cmdGreet">早安逸霆，準備好了嗎？</div>
+      <div class="cmd-title">🎖️ LAYSHOW 戰情儀表板</div>
+      <div class="cmd-grid">
+        <div class="cmd-stat" onclick="cmd('today')">
+          <div class="ic">📅</div>
+          <div class="num" id="kpiToday">-</div>
+          <div class="lbl">今日工單</div>
+        </div>
+        <div class="cmd-stat" onclick="showPage('expense')">
+          <div class="ic">💰</div>
+          <div class="num" id="kpiRevenue">-</div>
+          <div class="lbl">今日入帳</div>
+        </div>
+        <div class="cmd-stat" onclick="showPage('mileage')">
+          <div class="ic">🚗</div>
+          <div class="num" id="kpiKm">-</div>
+          <div class="lbl">本月里程</div>
+        </div>
+        <div class="cmd-stat" id="kpiUrgentCard" onclick="cmd('today')">
+          <div class="ic">🚨</div>
+          <div class="num" id="kpiUrgent">0</div>
+          <div class="lbl">急迫客戶</div>
+        </div>
+        <div class="cmd-stat" onclick="showPage('quote')">
+          <div class="ic">📄</div>
+          <div class="num" id="kpiQuote">-</div>
+          <div class="lbl">待回報價</div>
+        </div>
+        <div class="cmd-stat" id="kpiVipCard" onclick="cmd('status')">
+          <div class="ic">⭐</div>
+          <div class="num" id="kpiVip">-</div>
+          <div class="lbl">VIP 在線</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 副官對話突顯入口 ====== -->
+    <div class="commander-chat" onclick="showPage('ai_ask')">
+      <span class="av">🎖️</span>
+      <div class="txt">
+        <div class="ti">跟副官對話</div>
+        <div class="sb">問策略、討論客戶、商業諮詢</div>
+      </div>
+      <span class="arr">→</span>
+    </div>
+
+    <!-- ====== 急迫待辦（自動顯示） ====== -->
+    <div id="urgentArea"></div>
+
     <div class="section-title">🎯 主要操作</div>
     <div class="grid">
       <div class="action primary" onclick="showPage('quote')"><span class="emoji">💰</span><div class="name">產報價單</div></div>
@@ -1547,11 +1650,144 @@ function updateGreet() {
   document.getElementById('greet').textContent = `${g}，${new Date().getMonth()+1}/${new Date().getDate()} (週${wkd})`;
 }
 
+// ============ 副官晨報儀表板 ============
+async function refreshCommanderDash() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const monthStart = new Date(); monthStart.setDate(1);
+  const ms = monthStart.toISOString().slice(0, 10);
+
+  const H = { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Prefer': 'count=exact' };
+  const SU = s.supabaseUrl;
+
+  async function count(table, q) {
+    try {
+      const r = await fetch(`${SU}/rest/v1/${table}?${q}&select=count`, { headers: H });
+      return parseInt((r.headers.get('content-range') || '0').split('/').pop()) || 0;
+    } catch (e) { return 0; }
+  }
+  async function sum(table, q, col) {
+    try {
+      const r = await fetch(`${SU}/rest/v1/${table}?${q}&select=${col}`, { headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` }});
+      const data = await r.json();
+      return data.reduce((tot, x) => tot + (parseFloat(x[col]) || 0), 0);
+    } catch (e) { return 0; }
+  }
+
+  // 並行查全部
+  const [todayOrders, urgent, qPending, vip, qSent, expQueued, vipExpiring, monthKm] = await Promise.all([
+    count('work_orders', `created_at=gte.${today}`),
+    count('phone_customers', `status=eq.new&urgent=in.(urgent,high)`),
+    count('quick_quotes', `status=eq.sent`),
+    count('profiles', `is_vip=eq.true`),
+    count('crawler_hits', `status=eq.pending`),
+    count('crawler_hits', `status=eq.queued`),
+    count('profiles', `is_vip=eq.true&subscription_expiry=lt.${new Date(Date.now()+7*86400000).toISOString()}`),
+    sum('mileage_logs', `trip_date=gte.${ms}`, 'distance_km'),
+  ]);
+  const todayIncome = await sum('expenses', `expense_date=eq.${today}&expense_type=eq.income`, 'amount');
+
+  // 更新 UI
+  document.getElementById('kpiToday').textContent = todayOrders;
+  document.getElementById('kpiRevenue').textContent = todayIncome > 0 ? '$' + Math.round(todayIncome / 1000) + 'k' : '$0';
+  document.getElementById('kpiKm').textContent = Math.round(monthKm) + ' km';
+  document.getElementById('kpiUrgent').textContent = urgent;
+  document.getElementById('kpiQuote').textContent = qPending;
+  document.getElementById('kpiVip').textContent = vip;
+
+  // 急迫客戶 → 紅色閃爍
+  const urgentCard = document.getElementById('kpiUrgentCard');
+  urgentCard.classList.toggle('urgent', urgent > 0);
+  const vipCard = document.getElementById('kpiVipCard');
+  vipCard.classList.toggle('urgent', vipExpiring > 0);
+
+  // ====== 急迫待辦清單 ======
+  const ua = document.getElementById('urgentArea');
+  const cards = [];
+
+  if (urgent > 0) {
+    cards.push(`<div class="urgent-card" onclick="cmd('today')">
+      <span class="ic">🚨</span>
+      <div class="body">
+        <div class="tt">急迫客戶等回應</div>
+        <div class="sb">點查看名單 → LINE 直接聯絡</div>
+      </div>
+      <span class="cnt">${urgent}</span>
+    </div>`);
+  }
+  if (qPending > 0) {
+    cards.push(`<div class="urgent-card warning" onclick="showPage('quote')">
+      <span class="ic">📄</span>
+      <div class="body">
+        <div class="tt">客戶待回報價</div>
+        <div class="sb">已寄出未確認 → 跟催或重產</div>
+      </div>
+      <span class="cnt">${qPending}</span>
+    </div>`);
+  }
+  if (vipExpiring > 0) {
+    cards.push(`<div class="urgent-card warning" onclick="cmd('status')">
+      <span class="ic">⏰</span>
+      <div class="body">
+        <div class="tt">VIP 7 天內到期</div>
+        <div class="sb">提前打電話續訂避免流失</div>
+      </div>
+      <span class="cnt">${vipExpiring}</span>
+    </div>`);
+  }
+  if (expQueued > 0) {
+    cards.push(`<div class="urgent-card info" onclick="triggerBatchReply()">
+      <span class="ic">🎯</span>
+      <div class="body">
+        <div class="tt">爬蟲待批次留言</div>
+        <div class="sb">公司筆電 Playwright 留 10 個</div>
+      </div>
+      <span class="cnt">${expQueued}</span>
+    </div>`);
+  }
+  if (qSent > 0) {
+    cards.push(`<div class="urgent-card info" onclick="showPage('mileage')">
+      <span class="ic">📞</span>
+      <div class="body">
+        <div class="tt">待跟進客戶</div>
+        <div class="sb">爬蟲已留言 → 等你私訊</div>
+      </div>
+      <span class="cnt">${qSent}</span>
+    </div>`);
+  }
+
+  ua.innerHTML = cards.length ? `<div class="section-title" style="margin-top:14px;">🔥 急迫待辦</div>${cards.join('')}` : '';
+}
+
+// 更新副官打招呼
+function updateCommanderGreet() {
+  const h = new Date().getHours();
+  let g = '副官待命中';
+  if (h >= 5 && h < 9) g = '☀️ 早安逸霆，準備好了嗎？';
+  else if (h >= 9 && h < 12) g = '💪 加把勁，今天會是好日子';
+  else if (h >= 12 && h < 14) g = '🍱 午餐時間，記得休息';
+  else if (h >= 14 && h < 18) g = '🚀 下午衝刺時間';
+  else if (h >= 18 && h < 22) g = '🌅 晚餐後再戰一波';
+  else g = '🌙 早點休息，明天再戰';
+  const el = document.getElementById('cmdGreet');
+  if (el) el.textContent = g;
+}
+
 // ========= 啟動 =========
 loadSettings();
 updateGreet();
 updateStats();
 refreshCmdList();
+refreshCommanderDash();
+updateCommanderGreet();
+// 每分鐘刷新晨報
+setInterval(() => {
+  if (document.getElementById('page-home').classList.contains('active')) {
+    refreshCommanderDash();
+    updateCommanderGreet();
+  }
+}, 60000);
 
 // 請求通知權限（ZONE 行程提醒用）
 if ('Notification' in window && Notification.permission === 'default') {
