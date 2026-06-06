@@ -268,7 +268,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     <div class="grid">
       <div class="action primary" onclick="showPage('quote')"><span class="emoji">💰</span><div class="name">產報價單</div></div>
       <div class="action dark" onclick="showPage('customer')"><span class="emoji">👤</span><div class="name">新增客戶</div></div>
-      <div class="action success" onclick="capturePhoto()"><span class="emoji">📸</span><div class="name">拍工程照</div></div>
+      <div class="action success" onclick="showPage('photo_order')"><span class="emoji">📸</span><div class="name">拍照建單</div></div>
       <div class="action purple" onclick="showPage('voice')"><span class="emoji">🎙️</span><div class="name">語音記錄</div></div>
     </div>
 
@@ -293,6 +293,8 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     <div class="grid">
       <div class="action blue" onclick="showPage('ai_ask')"><span class="emoji">💬</span><div class="name">問 Claude</div></div>
       <div class="action purple" onclick="showPage('draft_reply')"><span class="emoji">🤖</span><div class="name">AI 草擬回覆</div></div>
+      <div class="action" style="background:linear-gradient(135deg,#FF6B35,#FF8C5A);color:#fff;" onclick="showPage('image_studio')"><span class="emoji">🎨</span><div class="name">派副官生圖</div></div>
+      <div class="action success" onclick="showPage('photo_order')"><span class="emoji">📸</span><div class="name">拍照建單</div></div>
     </div>
 
     <div class="section-title">⚡ 快速指令</div>
@@ -542,6 +544,109 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       </p>
     </div>
   </div>
+
+  <!-- ===== 🎨 派副官生圖（image_studio）===== -->
+  <div class="page" id="page-image_studio">
+    <div class="card">
+      <h2 style="margin-bottom:16px;">🎨 派副官生圖</h2>
+
+      <div class="form-group">
+        <label class="form-label">1️⃣ 主題</label>
+        <textarea class="form-input" id="isTopic" rows="2" placeholder="例：台中民宿維護方案、雷修 7 日保固承諾..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="font-size:12px;opacity:0.7;">快速範本</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button class="btn secondary" style="padding:8px;font-size:12px;" onclick="document.getElementById('isTopic').value='民宿/餐廳維護方案 - 7 日保固'">民宿/餐廳</button>
+          <button class="btn secondary" style="padding:8px;font-size:12px;" onclick="document.getElementById('isTopic').value='診所水電維修專業團隊'">診所水電</button>
+          <button class="btn secondary" style="padding:8px;font-size:12px;" onclick="document.getElementById('isTopic').value='社區管理員數位後援'">社區管理</button>
+          <button class="btn secondary" style="padding:8px;font-size:12px;" onclick="document.getElementById('isTopic').value='LAYSHOW 雷修 7 日保固承諾'">7 日保固</button>
+          <button class="btn secondary" style="padding:8px;font-size:12px;" onclick="document.getElementById('isTopic').value='師傅在客戶家現場維修'">維修現場</button>
+          <button class="btn secondary" style="padding:8px;font-size:12px;" onclick="document.getElementById('isTopic').value='LAYSHOW B2B 維護整合包行銷'">B2B 包裝</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">2️⃣ 類型</label>
+        <div id="isTypeGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;">
+          <div class="cat-btn active" data-type="b2b_ad" onclick="setImageType(this)"><div class="name">B2B 廣告</div></div>
+          <div class="cat-btn" data-type="ig_post" onclick="setImageType(this)"><div class="name">IG 貼文</div></div>
+          <div class="cat-btn" data-type="fb_ad" onclick="setImageType(this)"><div class="name">FB 廣告</div></div>
+          <div class="cat-btn" data-type="seo_blog" onclick="setImageType(this)"><div class="name">SEO 配圖</div></div>
+          <div class="cat-btn" data-type="quote_cover" onclick="setImageType(this)"><div class="name">報價封面</div></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">3️⃣ 張數</label>
+        <select class="form-input" id="isCount">
+          <option value="2">2 張</option>
+          <option value="4" selected>4 張</option>
+          <option value="6">6 張</option>
+        </select>
+      </div>
+
+      <button class="btn" onclick="submitImageRequest()">🚀 派副官生圖</button>
+      <button class="btn secondary" onclick="showPage('home')" style="margin-top:8px;">回首頁</button>
+
+      <h3 style="margin-top:24px;font-size:15px;">📋 歷史紀錄</h3>
+      <div id="isHistoryList" style="margin-top:8px;">
+        <div class="empty"><p style="font-size:13px;">載入中...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 📸 拍照建單（photo_order）===== -->
+  <div class="page" id="page-photo_order">
+    <div class="card">
+      <h2 style="margin-bottom:16px;">📸 副官拍照建單</h2>
+
+      <div class="form-group">
+        <label class="form-label">1️⃣ 拍照 / 上傳</label>
+        <label for="poPhoto" id="poPhotoArea" style="display:block;border:2px dashed rgba(255,255,255,0.2);border-radius:14px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(0,0,0,0.15);">
+          <div style="font-size:50px;" id="poIcon">📸</div>
+          <div style="font-size:14px;margin-top:8px;" id="poLabel">點此拍照或選圖</div>
+          <div style="font-size:11px;opacity:0.5;margin-top:6px;" id="poHint">支援 JPG/PNG，最大 10MB</div>
+          <img id="poPreview" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px;display:none;" alt="">
+        </label>
+        <input type="file" id="poPhoto" accept="image/*" capture="environment" style="display:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">2️⃣ 簡述（選填）</label>
+        <textarea class="form-input" id="poDesc" rows="2" placeholder="例：客戶說漏水 3 天了..."></textarea>
+      </div>
+
+      <button class="btn" id="poAnalyzeBtn" onclick="analyzeOrderPhoto()" disabled>🤖 派副官分析</button>
+      <button class="btn secondary" onclick="showPage('home')" style="margin-top:8px;">取消</button>
+
+      <div id="poResult" style="display:none;margin-top:20px;padding:16px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:12px;">
+        <h3 style="color:#4ade80;margin-bottom:10px;font-size:15px;">✅ 副官分析結果</h3>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);font-size:14px;">
+          <span style="opacity:0.6;">災損等級</span><span style="font-weight:600;color:#FF6B35;" id="poLevel">-</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);font-size:14px;">
+          <span style="opacity:0.6;">類型</span><span style="font-weight:600;color:#FF6B35;" id="poType">-</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);font-size:14px;">
+          <span style="opacity:0.6;">急迫度</span><span style="font-weight:600;color:#FF6B35;" id="poUrgency">-</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);font-size:14px;">
+          <span style="opacity:0.6;">預估費用</span><span style="font-weight:600;color:#FF6B35;" id="poPrice">-</span>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="opacity:0.6;font-size:12px;margin-bottom:4px;">問題描述</div>
+          <div id="poProblem" style="font-size:13px;line-height:1.5;"></div>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="opacity:0.6;font-size:12px;margin-bottom:4px;">建議處理</div>
+          <div id="poSolution" style="font-size:13px;line-height:1.5;"></div>
+        </div>
+        <button class="btn" onclick="confirmCreateOrder()" style="margin-top:14px;">✅ 建立工單草稿</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== ZONE Modals ===== -->
@@ -717,6 +822,7 @@ function showPage(name) {
   if (name === 'quote' && document.getElementById('quoteItems').children.length === 0) {
     addQuoteItem();
   }
+  if (name === 'image_studio') refreshImageHistory();
   // ZONE pages
   if (name === 'calendar') loadEvents();
   else if (name === 'expense') loadExpenses();
@@ -1522,7 +1628,7 @@ function copyText(t) {
 // ========= AI 草擬 =========
 async function draftReply() { return draftReplyDirect(); }
 
-// ========= 拍照 =========
+// ========= 拍照（舊：傳到 Telegram） =========
 function capturePhoto() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -1543,6 +1649,234 @@ function capturePhoto() {
     } catch (e) { toast('⚠️ 失敗'); }
   };
   input.click();
+}
+
+// ========= 🎨 派副官生圖（image_studio）=========
+let _imageType = 'b2b_ad';
+
+function setImageType(el) {
+  document.querySelectorAll('#isTypeGrid .cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  _imageType = el.dataset.type;
+}
+
+async function submitImageRequest() {
+  const topic = document.getElementById('isTopic').value.trim();
+  const count = parseInt(document.getElementById('isCount').value);
+  if (!topic) { toast('⚠️ 請輸入主題'); return; }
+  const s = getS();
+  if (!s.supabaseKey) { toast('⚠️ 先到設定填 Supabase Key'); showPage('settings'); return; }
+
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/image_requests`, {
+      method: 'POST',
+      headers: {
+        'apikey': s.supabaseKey,
+        'Authorization': `Bearer ${s.supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        user_topic: topic,
+        image_type: _imageType,
+        count: count,
+        source: 'pwa'
+      })
+    });
+    if (r.ok) {
+      toast('✅ 副官接到，5 分鐘後圖到 Telegram');
+      document.getElementById('isTopic').value = '';
+      setTimeout(refreshImageHistory, 1500);
+    } else {
+      const t = await r.text();
+      toast('❌ ' + t.slice(0, 60));
+    }
+  } catch (e) { toast('❌ 網路錯誤'); }
+}
+
+async function refreshImageHistory() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/image_requests?order=created_at.desc&limit=10`, {
+      headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` }
+    });
+    const data = await r.json();
+    const list = document.getElementById('isHistoryList');
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = '<div class="empty"><p style="font-size:13px;">還沒派過副官生圖</p></div>';
+      return;
+    }
+    const emojiMap = { pending: '⏳', processing: '🔄', done: '✅', failed: '❌' };
+    list.innerHTML = data.map(it => {
+      const e = emojiMap[it.status] || '❓';
+      const time = new Date(it.created_at).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const urls = it.image_urls;
+      let imgs = '';
+      if (Array.isArray(urls) && urls.length > 0) {
+        imgs = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:4px;margin-top:6px;">' +
+          urls.slice(0,6).map(u => `<a href="${u}" target="_blank"><img src="${u}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;"></a>`).join('') +
+          '</div>';
+      }
+      return `<div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;margin-bottom:6px;border-left:3px solid ${it.status==='done'?'#4ade80':it.status==='failed'?'#ef4444':it.status==='processing'?'#fbbf24':'#999'};">
+        <div style="font-weight:600;font-size:14px;">${e} ${it.user_topic}</div>
+        <div style="font-size:11px;opacity:0.6;margin-top:2px;">${it.image_type} · ${it.count}張 · ${time}</div>
+        ${imgs}
+      </div>`;
+    }).join('');
+  } catch (e) {}
+}
+
+// ========= 📸 拍照建單（photo_order）=========
+let _orderPhotoBase64 = null;
+let _orderAnalysis = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const poPhoto = document.getElementById('poPhoto');
+  if (poPhoto) {
+    poPhoto.addEventListener('change', handleOrderPhoto);
+  }
+});
+
+async function handleOrderPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('❌ 圖片太大（>10MB）'); return; }
+
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    img.onload = () => {
+      const maxW = 1600;
+      const scale = Math.min(maxW / img.width, 1);
+      const w = img.width * scale, h = img.height * scale;
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = c.toDataURL('image/jpeg', 0.85);
+      _orderPhotoBase64 = compressed.split(',')[1];
+      const preview = document.getElementById('poPreview');
+      preview.src = compressed;
+      preview.style.display = 'block';
+      document.getElementById('poIcon').style.display = 'none';
+      document.getElementById('poLabel').textContent = '✅ 已選擇 ('+(file.size/1024).toFixed(0)+'KB)';
+      document.getElementById('poHint').style.display = 'none';
+      document.getElementById('poAnalyzeBtn').disabled = false;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeOrderPhoto() {
+  if (!_orderPhotoBase64) { toast('⚠️ 請先拍照'); return; }
+  const s = getS();
+  if (!s.anthropicKey) { toast('⚠️ 先到設定貼 Anthropic API Key'); showPage('settings'); return; }
+
+  const desc = document.getElementById('poDesc').value.trim();
+  const btn = document.getElementById('poAnalyzeBtn');
+  btn.disabled = true; btn.textContent = '🔍 副官分析中...';
+
+  const prompt = `你是 LAYSHOW 雷修平台的 AI 派工專家。
+請看這張照片並分析家居維修問題。
+${desc ? `補充說明：${desc}` : ''}
+
+請以 JSON 格式回覆：
+{
+  "level": "T0/T1/T2/T3/T4",
+  "level_desc": "等級說明",
+  "type": "問題類型",
+  "urgency": "緊急/正常/可預約",
+  "problem": "問題描述（30字內）",
+  "solution": "建議處理（50字內）",
+  "price_min": 數字,
+  "price_max": 數字
+}
+
+T0=重大災情 T1=緊急 T2=一般 T3=養護 T4=美化
+只回 JSON，不要其他文字。`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: _orderPhotoBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!r.ok) { toast('❌ Claude API 失敗'); return; }
+    const data = await r.json();
+    const text = data.content[0].text;
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) { toast('❌ AI 回應格式錯誤'); return; }
+    const result = JSON.parse(m[0]);
+    _orderAnalysis = result;
+
+    document.getElementById('poLevel').textContent = result.level + ' - ' + (result.level_desc || '');
+    document.getElementById('poType').textContent = result.type || '-';
+    document.getElementById('poUrgency').textContent = result.urgency || '-';
+    document.getElementById('poPrice').textContent = `NT$ ${result.price_min || '?'} - ${result.price_max || '?'}`;
+    document.getElementById('poProblem').textContent = result.problem || '-';
+    document.getElementById('poSolution').textContent = result.solution || '-';
+    document.getElementById('poResult').style.display = 'block';
+    document.getElementById('poResult').scrollIntoView({behavior:'smooth'});
+  } catch (e) {
+    toast('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 派副官分析';
+  }
+}
+
+async function confirmCreateOrder() {
+  if (!_orderAnalysis) { toast('⚠️ 沒有分析結果'); return; }
+  const s = getS();
+  const desc = document.getElementById('poDesc').value.trim();
+  const payload = {
+    title: `[${_orderAnalysis.level}] ${_orderAnalysis.type}`,
+    description: (desc ? desc + '\n\n' : '') +
+      `AI 識別問題：${_orderAnalysis.problem}\n` +
+      `建議處理：${_orderAnalysis.solution}\n` +
+      `災損等級：${_orderAnalysis.level} (${_orderAnalysis.level_desc || ''})`,
+    status: 'draft',
+    urgency: _orderAnalysis.urgency || 'normal',
+    estimated_min: _orderAnalysis.price_min || 0,
+    estimated_max: _orderAnalysis.price_max || 0,
+    source: 'pwa_photo',
+  };
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/work_orders`, {
+      method: 'POST',
+      headers: {
+        'apikey': s.supabaseKey,
+        'Authorization': `Bearer ${s.supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      const data = await r.json();
+      toast('✅ 工單草稿已建立 #' + data[0].id);
+      setTimeout(() => showPage('home'), 1500);
+    } else {
+      const t = await r.text();
+      toast('❌ 建單失敗: ' + t.slice(0,60));
+    }
+  } catch (e) { toast('❌ 網路錯誤'); }
 }
 
 // ========= 即時指令動態（多設備同步）=========
