@@ -1618,9 +1618,9 @@ async function triggerBatchReply() {
   if (!s.supabaseKey) { toast('⚠️ 先到設定貼 Supabase Key'); showPage('settings'); return; }
   const cntTxt = document.getElementById('queuedCount').textContent;
   if (cntTxt.includes('無待留言')) { toast('📭 沒有待留言目標'); return; }
-  if (!confirm('確定開始批次留言嗎？\n\n桌機會一一執行，隨機間隔 30-90 秒避免被偵測。\n進度會推 LINE 群組。')) return;
+  if (!confirm('確定開始批次留言嗎？\n\n公司筆電 Playwright 會一一執行（間隔 30-90 秒），進度推 LINE 群組。')) return;
   await sendCommand('reply_now', {}, '🚀 開始批次留言');
-  toast('🚀 已下指令，桌機背景執行中...');
+  toast('🚀 已下指令，公司筆電 Playwright 執行中...');
   setTimeout(refreshQueuedCount, 2000);
 }
 
