@@ -230,24 +230,36 @@ function updateStats() {
   }
 }
 
+// Telegram 預設值（公司筆電直接用，不用設定）
+const TG_TOKEN_DEFAULT = '8585783388:AAFldD2N1ASet7AzpJ-FJbl1Psj8hdMIcOQ';
+const TG_CHAT_DEFAULT = '@layshow888';
+
 async function triggerBatch() {
   if (!confirm('開始批次留言？\n\n桌機 Worker 會一一執行（間隔 30-90 秒），進度推 LINE 群組')) return;
   const s = getS();
-  if (!s.tgToken || !s.tgChat) {
-    alert('需要 Telegram Token + Chat ID 才能下指令\n請到 PWA 設定貼齊');
+  if (!s.supabaseKey) {
+    alert('請先點「⚙️ 設定 Key」貼 Supabase Key');
     return;
   }
+  const tgToken = s.tgToken || TG_TOKEN_DEFAULT;
+  const tgChat = s.tgChat || TG_CHAT_DEFAULT;
   try {
-    await fetch(`${s.supabaseUrl}/rest/v1/command_logs`, {
+    // 1. 寫 command_logs（讓 Worker 能追蹤）
+    await fetch(`${SUPABASE_URL}/rest/v1/command_logs`, {
       method: 'POST',
       headers: { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ command_type: 'reply_now', command_data: {}, source: 'crawler_pool' }),
     });
-    await fetch(`https://api.telegram.org/bot${s.tgToken}/sendMessage`, {
+    // 2. 推 Telegram 觸發 Worker
+    const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: s.tgChat, text: '🎯 [指令] reply_now' }),
+      body: JSON.stringify({ chat_id: tgChat, text: '🎯 [指令] reply_now' }),
     });
-    toast('🚀 已下指令，桌機背景執行中...');
+    if (r.ok) {
+      toast('🚀 已下指令，桌機背景執行中...');
+    } else {
+      toast('⚠️ 指令已存 DB，Worker 會處理（Telegram 未配對）');
+    }
   } catch (e) { toast('❌ ' + e.message, true); }
 }
 
@@ -371,16 +383,23 @@ function copyTemplate(text) {
 }
 
 function openSettings() {
-  const cur = (getS().supabaseKey || '');
-  const key = prompt('貼上 Supabase Service Role Key（從 monitor_supabase_key.txt）：', cur);
-  if (key && key.length > 50) {
-    const s = getS();
-    s.supabaseKey = key.trim();
+  const s = getS();
+  // Step 1: Supabase Key
+  const supaKey = prompt('① Supabase Service Role Key:\n\n（從桌機 monitor_supabase_key.txt 複製，或 Supabase Dashboard → Settings → API → service_role）', s.supabaseKey || '');
+  if (supaKey === null) return;
+  if (supaKey && supaKey.length > 50) {
+    s.supabaseKey = supaKey.trim();
     s.supabaseUrl = SUPABASE_URL;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-    toast('✅ Key 已存');
-    loadHits();
   }
+  // Step 2: Telegram (可選，有預設值)
+  const tgT = prompt('② Telegram Bot Token (可選，已有預設):\n\n按確定保留預設，或自訂', s.tgToken || TG_TOKEN_DEFAULT);
+  if (tgT !== null) s.tgToken = tgT.trim() || TG_TOKEN_DEFAULT;
+  const tgC = prompt('③ Telegram Chat ID (可選，已有預設):\n\n按確定保留預設', s.tgChat || TG_CHAT_DEFAULT);
+  if (tgC !== null) s.tgChat = tgC.trim() || TG_CHAT_DEFAULT;
+
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  toast('✅ 設定已存');
+  loadHits();
 }
 
 // 啟動 + 30 秒自動刷新
