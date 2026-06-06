@@ -248,7 +248,7 @@ const TG_TOKEN_DEFAULT = '8585783388:AAFldD2N1ASet7AzpJ-FJbl1Psj8hdMIcOQ';
 const TG_CHAT_DEFAULT = '@layshow888';
 
 async function triggerBatch() {
-  if (!confirm('開始批次留言？\n\n桌機 Worker 會一一執行（間隔 30-90 秒），進度推 LINE 群組')) return;
+  if (!confirm('開始批次留言？\n\n公司筆電 Playwright 會一一執行（間隔 30-90 秒），進度推 LINE 群組')) return;
   const s = getS();
   if (!s.supabaseKey) {
     alert('請先點「⚙️ 設定 Key」貼 Supabase Key');
@@ -269,7 +269,7 @@ async function triggerBatch() {
       body: JSON.stringify({ chat_id: tgChat, text: '🎯 [指令] reply_now' }),
     });
     if (r.ok) {
-      toast('🚀 已下指令，桌機背景執行中...');
+      toast('🚀 已下指令，公司筆電 Playwright 執行中...');
     } else {
       toast('⚠️ 指令已存 DB，Worker 會處理（Telegram 未配對）');
     }
