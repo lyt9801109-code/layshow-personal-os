@@ -1,0 +1,50 @@
+{
+  "name": "LAYSHOW 爬蟲客戶池",
+  "short_name": "LAYSHOW 客戶池",
+  "description": "公司筆電 24/7 客戶池監看 + 跟進儀表板",
+  "start_url": "./crawler_pool.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "background_color": "#0c2340",
+  "theme_color": "#F37021",
+  "lang": "zh-TW",
+  "id": "/layshow-personal-os/crawler_pool",
+  "version": "1.0.0",
+  "icons": [
+    {
+      "src": "icon-pool-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-pool-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-pool-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "重新整理",
+      "short_name": "刷新",
+      "url": "./crawler_pool.html?action=refresh",
+      "icons": [{ "src": "icon-pool-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "PWA 主程式",
+      "short_name": "PWA",
+      "url": "./index.html",
+      "icons": [{ "src": "icon-pool-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false
+}
