@@ -2,8 +2,21 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>LAYSHOW 爬蟲客戶池</title>
+
+<!-- ===== PWA META ===== -->
+<link rel="manifest" href="manifest_pool.json">
+<meta name="theme-color" content="#F37021">
+<meta name="description" content="LAYSHOW 爬蟲客戶池 — 公司筆電 24/7 跟進中心">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="客戶池">
+<link rel="apple-touch-icon" href="icon-pool-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-pool-192.png">
+<meta name="application-name" content="LAYSHOW 客戶池">
+<meta name="msapplication-TileColor" content="#0c2340">
+<meta name="msapplication-TileImage" content="icon-pool-192.png">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -405,6 +418,52 @@ function openSettings() {
 // 啟動 + 30 秒自動刷新
 loadHits();
 setInterval(loadHits, 30000);
+
+// ============ PWA Service Worker 註冊 ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw_pool.js').then(
+      reg => console.log('[SW] 註冊成功', reg.scope),
+      err => console.log('[SW] 註冊失敗', err)
+    );
+  });
+}
+
+// ============ PWA 安裝提示 ============
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // 顯示安裝按鈕
+  const btn = document.createElement('div');
+  btn.id = 'installBtn';
+  btn.style.cssText = 'position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#F37021,#e11d48);color:white;padding:14px 22px;border-radius:30px;cursor:pointer;font-size:14px;font-weight:700;box-shadow:0 4px 20px rgba(243,112,33,0.4);z-index:9999;display:flex;align-items:center;gap:8px;';
+  btn.innerHTML = '<span style="font-size:20px;">📥</span> 安裝為應用程式';
+  btn.onclick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        toast('✅ 已安裝！');
+        btn.remove();
+      }
+      deferredPrompt = null;
+    }
+  };
+  document.body.appendChild(btn);
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] 安裝完成');
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.remove();
+});
+
+// 已安裝狀態 → 不顯示安裝按鈕
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  document.title = '🎯 LAYSHOW 客戶池 (App)';
+  console.log('[PWA] 以獨立 App 模式運行');
+}
 </script>
 </body>
 </html>
