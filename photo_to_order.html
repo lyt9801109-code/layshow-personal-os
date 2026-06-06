@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0A2540">
+<title>📸 拍照建單 - LAYSHOW</title>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: linear-gradient(135deg, #0A2540 0%, #1a3a5c 100%);
+  color: #fff;
+  min-height: 100vh;
+  padding: 16px;
+  padding-bottom: 100px;
+}
+.container { max-width: 720px; margin: 0 auto; }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 16px;
+}
+.header h1 { font-size: 20px; font-weight: 700; }
+.header .back { color: #FF6B35; text-decoration: none; font-size: 14px; }
+
+.card {
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.card h2 { font-size: 16px; margin-bottom: 12px; color: #FF6B35; }
+
+.photo-area {
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 16px;
+  background: rgba(0,0,0,0.2);
+}
+.photo-area .icon { font-size: 60px; margin-bottom: 12px; }
+.photo-area .label { font-size: 16px; }
+.photo-area .hint { font-size: 12px; opacity: 0.5; margin-top: 8px; }
+
+#photoPreview {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: none;
+}
+
+input[type=file] { display: none; }
+
+textarea {
+  width: 100%;
+  padding: 14px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-family: inherit;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%);
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 16px;
+  box-shadow: 0 4px 16px rgba(255,107,53,0.4);
+}
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ai-result {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  display: none;
+}
+.ai-result h3 { color: #4ade80; margin-bottom: 12px; font-size: 16px; }
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 14px;
+}
+.field-row label { opacity: 0.6; }
+.field-row .value { font-weight: 600; color: #FF6B35; }
+
+.status-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.9);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 14px;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+}
+.status-banner.show { opacity: 1; }
+.status-banner.success { background: #16a34a; }
+.status-banner.error { background: #dc2626; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <a href="index.html" class="back">← 副官首頁</a>
+    <h1>📸 拍照建單</h1>
+    <div></div>
+  </div>
+
+  <div class="card">
+    <h2>1️⃣ 拍照 / 上傳</h2>
+    <label for="photoInput" class="photo-area" id="photoArea">
+      <div class="icon">📸</div>
+      <div class="label">點此拍照或選擇圖片</div>
+      <div class="hint">支援 JPG/PNG，最大 10MB</div>
+      <img id="photoPreview" alt="預覽">
+    </label>
+    <input type="file" id="photoInput" accept="image/*" capture="environment">
+  </div>
+
+  <div class="card">
+    <h2>2️⃣ 簡述（選填）</h2>
+    <textarea id="description" placeholder="例：客戶說漏水 3 天了，廁所牆面也濕了..."></textarea>
+  </div>
+
+  <button class="submit-btn" id="analyzeBtn" onclick="analyzePhoto()" disabled>
+    🤖 派副官分析（Claude Vision）
+  </button>
+
+  <div class="ai-result" id="aiResult">
+    <h3>✅ 副官分析結果</h3>
+    <div class="field-row">
+      <label>災損等級</label>
+      <span class="value" id="rField">-</span>
+    </div>
+    <div class="field-row">
+      <label>類型</label>
+      <span class="value" id="typeField">-</span>
+    </div>
+    <div class="field-row">
+      <label>急迫度</label>
+      <span class="value" id="urgencyField">-</span>
+    </div>
+    <div class="field-row">
+      <label>預估費用範圍</label>
+      <span class="value" id="priceField">-</span>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="opacity:0.6;font-size:13px;margin-bottom:6px;">問題描述</div>
+      <div id="problemDesc" style="font-size:14px;line-height:1.6;"></div>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="opacity:0.6;font-size:13px;margin-bottom:6px;">建議處理方式</div>
+      <div id="solutionDesc" style="font-size:14px;line-height:1.6;"></div>
+    </div>
+
+    <button class="submit-btn" onclick="confirmAndCreateOrder()" style="margin-top:20px;">
+      ✅ 建立工單草稿
+    </button>
+  </div>
+</div>
+
+<div class="status-banner" id="statusBanner"></div>
+
+<script>
+// 🔒 Claude Key 放本機 localStorage（不寫入代碼，更安全）
+function getClaudeKey() {
+  let k = localStorage.getItem('LAYSHOW_CLAUDE_KEY');
+  if (!k) {
+    k = prompt('首次使用：請貼上 Anthropic API Key\n（取自 console.anthropic.com，只存你手機本機）');
+    if (k && k.startsWith('sk-ant-')) {
+      localStorage.setItem('LAYSHOW_CLAUDE_KEY', k);
+    } else if (k) {
+      alert('Key 格式不對，應該以 sk-ant- 開頭');
+      return null;
+    }
+  }
+  return k;
+}
+const SUPABASE_URL = "https://ujaogedhwcbyczzpgzpy.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzA5OTQ4MCwiZXhwIjoyMDkyNjc1NDgwfQ.ogfRhGK994IsYnuSCiRHYzvlKCXQp1QOPGTjNzUgb1Y";
+
+let photoBase64 = null;
+let analysisResult = null;
+
+function showToast(msg, type='') {
+  const el = document.getElementById('statusBanner');
+  el.textContent = msg;
+  el.className = 'status-banner show ' + type;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+document.getElementById('photoInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('圖片太大（>10MB）', 'error');
+    return;
+  }
+
+  // 壓縮到 1600px 寬
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    img.onload = () => {
+      const maxW = 1600;
+      const scale = Math.min(maxW / img.width, 1);
+      const w = img.width * scale, h = img.height * scale;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      const compressed = canvas.toDataURL('image/jpeg', 0.85);
+      photoBase64 = compressed.split(',')[1];
+
+      const preview = document.getElementById('photoPreview');
+      preview.src = compressed;
+      preview.style.display = 'block';
+
+      document.querySelector('.photo-area .icon').style.display = 'none';
+      document.querySelector('.photo-area .label').textContent = '✅ 已選擇 ('+(file.size/1024).toFixed(0)+'KB)';
+      document.querySelector('.photo-area .hint').style.display = 'none';
+
+      document.getElementById('analyzeBtn').disabled = false;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+async function analyzePhoto() {
+  if (!photoBase64) {
+    showToast('請先拍照', 'error');
+    return;
+  }
+
+  const CLAUDE_KEY = getClaudeKey();
+  if (!CLAUDE_KEY) {
+    showToast('需要 Claude API Key 才能分析', 'error');
+    return;
+  }
+
+  const desc = document.getElementById('description').value.trim();
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = '🔍 副官分析中...';
+
+  const prompt = `你是 LAYSHOW 雷修平台的 AI 派工專家。
+請看這張照片並分析家居維修問題。
+
+${desc ? `補充說明：${desc}` : ''}
+
+請以 JSON 格式回覆，必須包含以下欄位：
+{
+  "level": "T0/T1/T2/T3/T4 其中一個",
+  "level_desc": "等級說明（如：T2 = 一般維修）",
+  "type": "問題類型（如：水管漏水/電路跳電/壁癌/門鎖故障）",
+  "urgency": "急迫度（緊急/正常/可預約）",
+  "problem": "問題描述（30 字內）",
+  "solution": "建議處理方式（50 字內，含工法）",
+  "price_min": 預估費用下限（數字，不含元）,
+  "price_max": 預估費用上限（數字，不含元）
+}
+
+T0-T4 災損分級：
+- T0 = 重大災情（淹水、起火、結構受損）
+- T1 = 緊急修繕（無水/無電/門打不開）
+- T2 = 一般維修（漏水、跳電、馬桶不通）
+- T3 = 養護維護（保養、清潔、定期檢查）
+- T4 = 美化改裝（裝修、油漆、家具）
+
+只回 JSON，不要其他文字。`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': CLAUDE_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: photoBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    if (!r.ok) {
+      const t = await r.text();
+      showToast('Claude API: ' + t.slice(0, 80), 'error');
+      return;
+    }
+
+    const data = await r.json();
+    const text = data.content[0].text;
+
+    // 抓 JSON
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) {
+      showToast('AI 回應格式錯誤', 'error');
+      return;
+    }
+    const result = JSON.parse(m[0]);
+    analysisResult = result;
+
+    // 顯示
+    document.getElementById('rField').textContent = result.level + ' - ' + (result.level_desc || '');
+    document.getElementById('typeField').textContent = result.type || '-';
+    document.getElementById('urgencyField').textContent = result.urgency || '-';
+    document.getElementById('priceField').textContent = `NT$ ${result.price_min || '?'} - ${result.price_max || '?'}`;
+    document.getElementById('problemDesc').textContent = result.problem || '-';
+    document.getElementById('solutionDesc').textContent = result.solution || '-';
+    document.getElementById('aiResult').style.display = 'block';
+    document.getElementById('aiResult').scrollIntoView({behavior:'smooth'});
+
+  } catch (e) {
+    showToast('分析失敗: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 派副官分析（Claude Vision）';
+  }
+}
+
+async function confirmAndCreateOrder() {
+  if (!analysisResult) {
+    showToast('沒有分析結果', 'error');
+    return;
+  }
+
+  // 寫工單草稿到 Supabase
+  const desc = document.getElementById('description').value.trim();
+  const payload = {
+    title: `[${analysisResult.level}] ${analysisResult.type}`,
+    description: (desc ? desc + '\n\n' : '') +
+                 `AI 識別問題：${analysisResult.problem}\n` +
+                 `建議處理：${analysisResult.solution}\n` +
+                 `災損等級：${analysisResult.level} (${analysisResult.level_desc || ''})`,
+    status: 'draft',
+    urgency: analysisResult.urgency || 'normal',
+    estimated_min: analysisResult.price_min || 0,
+    estimated_max: analysisResult.price_max || 0,
+    source: 'pwa_photo',
+  };
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/work_orders`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (r.ok) {
+      const data = await r.json();
+      showToast('✅ 工單草稿已建立 #' + data[0].id, 'success');
+      setTimeout(() => location.href = 'index.html', 2000);
+    } else {
+      const t = await r.text();
+      showToast('建單失敗: ' + t.slice(0, 80), 'error');
+    }
+  } catch (e) {
+    showToast('網路錯誤: ' + e.message, 'error');
+  }
+}
+</script>
+
+</body>
+</html>
