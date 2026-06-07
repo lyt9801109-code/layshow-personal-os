@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#dc2626">
+<meta name="color-scheme" content="light only">
+<title>🚨 PRIORITY 即時看板</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #dc2626; --dark: #0c2340; --bg: #f8fafc; --card: #ffffff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+}
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 60px; }
+.header {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: white; padding: 24px 16px; border-radius: 20px;
+  margin: -16px -16px 20px; position: relative; overflow: hidden;
+}
+.header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; background: white; opacity: 0.1; animation: pulse 3s infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.1; transform: scale(1); } 50% { opacity: 0.2; transform: scale(1.1); } }
+.header h1 { font-size: 22px; font-weight: 800; }
+.header .sub { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.stat { background: rgba(255,255,255,0.18); backdrop-filter: blur(10px); padding: 10px 8px; border-radius: 10px; text-align: center; }
+.stat .label { font-size: 10px; opacity: 0.85; }
+.stat .val { font-size: 22px; font-weight: 800; margin-top: 2px; }
+.hit-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-left: 4px solid #dc2626;
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.hit-card:active { transform: scale(0.98); }
+.hit-card .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.hit-card .source { font-size: 11px; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; padding: 3px 8px; border-radius: 8px; font-weight: 700; }
+.hit-card .time { font-size: 11px; color: var(--text-muted); }
+.hit-card .status { font-size: 10px; padding: 2px 8px; border-radius: 6px; margin-left: auto; }
+.status-new { background: #fef3c7; color: #92400e; }
+.status-notified { background: #dbeafe; color: #1e40af; }
+.status-converted { background: #d1fae5; color: #065f46; }
+.hit-card .kws { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.kw { font-size: 11px; background: #fee2e2; color: #991b1b; padding: 2px 7px; border-radius: 7px; font-weight: 600; }
+.hit-card .text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.section-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 16px 0 8px; padding-left: 4px; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); display: flex; padding: 8px 0; z-index: 100; max-width: 480px; margin: 0 auto; }
+.nav-item { flex: 1; text-align: center; padding: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
+.nav-item.active { color: var(--primary); }
+.refresh-btn {
+  position: fixed; bottom: 80px; right: 16px;
+  background: var(--primary); color: white;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: none; font-size: 24px;
+  box-shadow: 0 4px 14px rgba(220,38,38,0.4);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+.loading { text-align: center; padding: 30px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>🚨 PRIORITY 即時看板</h1>
+    <div class="sub">20w 會員社團 命中關鍵字立刻顯示</div>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">總命中</div>
+        <div class="val" id="totalCount">-</div>
+      </div>
+      <div class="stat">
+        <div class="label">今日新</div>
+        <div class="val" id="todayCount">-</div>
+      </div>
+      <div class="stat">
+        <div class="label">待處理</div>
+        <div class="val" id="newCount">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">🔥 最近 30 筆 PRIORITY 命中</div>
+  <div id="hitsList" class="loading">載入中...</div>
+</div>
+
+<button class="refresh-btn" onclick="loadHits()">🔄</button>
+
+<nav class="bottom-nav">
+  <div class="nav-item" onclick="location.href='index.html'">🏠 主頁</div>
+  <div class="nav-item" onclick="location.href='army.html'">🎖️ 軍團</div>
+  <div class="nav-item active">🚨 PRIORITY</div>
+  <div class="nav-item" onclick="location.href='crawler_pool.html'">📍 客戶池</div>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMjg2ODAsImV4cCI6MjAyOTYwNDY4MH0.Sh7tNILJaUSPzqLGN3-AXZ2hdkTLpKjF54hMmJ_b-Uk';
+
+async function loadHits() {
+  document.getElementById('hitsList').innerHTML = '<div class="loading">🔄 載入中...</div>';
+  try {
+    const [hitsRes, statsRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/priority_hits?select=*&order=notified_at.desc&limit=30`, {
+        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/v_priority_hits_stats`, {
+        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+      }).catch(() => null)
+    ]);
+    const hits = await hitsRes.json();
+    renderHits(hits);
+  } catch (e) {
+    document.getElementById('hitsList').innerHTML = `<div class="empty">❌ 載入失敗：${e.message}</div>`;
+  }
+}
+
+function renderHits(hits) {
+  if (!Array.isArray(hits) || hits.length === 0) {
+    document.getElementById('hitsList').innerHTML = `
+      <div class="empty">
+        <div style="font-size:48px;margin-bottom:12px;">🌫️</div>
+        <div>還沒有 PRIORITY 命中</div>
+        <div style="margin-top:8px;font-size:11px;">桌機爬蟲 10 分鐘巡邏 1 次<br>命中後會即時顯示</div>
+      </div>
+    `;
+    document.getElementById('totalCount').textContent = '0';
+    document.getElementById('todayCount').textContent = '0';
+    document.getElementById('newCount').textContent = '0';
+    return;
+  }
+
+  // Stats
+  document.getElementById('totalCount').textContent = hits.length;
+  const today = new Date().toISOString().substring(0,10);
+  document.getElementById('todayCount').textContent = hits.filter(h => (h.notified_at || '').startsWith(today)).length;
+  document.getElementById('newCount').textContent = hits.filter(h => h.status === 'new').length;
+
+  // List
+  let html = '';
+  for (const h of hits) {
+    const time = new Date(h.notified_at).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'});
+    const statusClass = `status-${h.status || 'new'}`;
+    const statusText = {new:'新', notified:'已通知', contacted:'已聯絡', converted:'已轉化', ignored:'忽略'}[h.status] || h.status;
+    const kws = (h.matched_keywords || []).slice(0, 6);
+    const text = (h.post_text || '').substring(0, 200);
+    html += `
+      <div class="hit-card" onclick="window.open('${h.post_url || '#'}', '_blank')">
+        <div class="meta">
+          <span class="source">${h.source_group || '未知群組'}</span>
+          <span class="time">${time}</span>
+          <span class="status ${statusClass}">${statusText}</span>
+        </div>
+        <div class="kws">${kws.map(k => `<span class="kw">${k}</span>`).join('')}</div>
+        <div class="text">${text}${h.post_text && h.post_text.length > 200 ? '...' : ''}</div>
+      </div>
+    `;
+  }
+  document.getElementById('hitsList').innerHTML = html;
+}
+
+loadHits();
+setInterval(loadHits, 30000); // 每 30 秒刷新
+</script>
+</body>
+</html>
