@@ -146,7 +146,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 
 .action.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; }
 
-/* ====== 副官晨報儀表板 ====== */
+/* ====== 軍師管家晨報儀表板 ====== */
 .commander {
   background: linear-gradient(135deg, #0c2340 0%, #1a4a8a 50%, #6366f1 100%);
   color: white; border-radius: 18px; padding: 16px; margin-bottom: 14px;
@@ -287,11 +287,11 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       </div>
     </div>
 
-    <!-- ====== 副官對話突顯入口 ====== -->
+    <!-- ====== 軍師管家對話突顯入口 ====== -->
     <div class="commander-chat" onclick="showPage('ai_ask')">
       <span class="av">🎖️</span>
       <div class="txt">
-        <div class="ti">跟副官對話</div>
+        <div class="ti">跟軍師管家對話</div>
         <div class="sb">問策略、討論客戶、商業諮詢</div>
       </div>
       <span class="arr">→</span>
@@ -329,7 +329,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     <div class="grid">
       <div class="action blue" onclick="showPage('ai_ask')"><span class="emoji">💬</span><div class="name">問 Claude</div></div>
       <div class="action purple" onclick="showPage('draft_reply')"><span class="emoji">🤖</span><div class="name">AI 草擬回覆</div></div>
-      <div class="action" style="background:linear-gradient(135deg,#FF6B35,#FF8C5A);color:#fff;" onclick="showPage('image_studio')"><span class="emoji">🎨</span><div class="name">派副官生圖</div></div>
+      <div class="action" style="background:linear-gradient(135deg,#FF6B35,#FF8C5A);color:#fff;" onclick="showPage('image_studio')"><span class="emoji">🎨</span><div class="name">派軍師管家生圖</div></div>
       <div class="action success" onclick="showPage('photo_order')"><span class="emoji">📸</span><div class="name">拍照建單</div></div>
       <div class="action" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;" onclick="showPage('photo_b2b')"><span class="emoji">🏢</span><div class="name">拍店招找 B2B</div></div>
     </div>
@@ -582,10 +582,10 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     </div>
   </div>
 
-  <!-- ===== 🎨 派副官生圖（image_studio）===== -->
+  <!-- ===== 🎨 派軍師管家生圖（image_studio）===== -->
   <div class="page" id="page-image_studio">
     <div class="card">
-      <h2 style="margin-bottom:16px;">🎨 派副官生圖</h2>
+      <h2 style="margin-bottom:16px;">🎨 派軍師管家生圖</h2>
 
       <div class="form-group">
         <label class="form-label">1️⃣ 主題</label>
@@ -624,7 +624,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
         </select>
       </div>
 
-      <button class="btn" onclick="submitImageRequest()">🚀 派副官生圖</button>
+      <button class="btn" onclick="submitImageRequest()">🚀 派軍師管家生圖</button>
       <button class="btn secondary" onclick="showPage('home')" style="margin-top:8px;">回首頁</button>
 
       <h3 style="margin-top:24px;font-size:15px;">📋 歷史紀錄</h3>
@@ -637,7 +637,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   <!-- ===== 📸 拍照建單（photo_order）===== -->
   <div class="page" id="page-photo_order">
     <div class="card">
-      <h2 style="margin-bottom:16px;">📸 副官拍照建單</h2>
+      <h2 style="margin-bottom:16px;">📸 軍師管家拍照建單</h2>
 
       <div class="form-group">
         <label class="form-label">1️⃣ 拍照 / 上傳</label>
@@ -655,11 +655,11 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
         <textarea class="form-input" id="poDesc" rows="2" placeholder="例：客戶說漏水 3 天了..."></textarea>
       </div>
 
-      <button class="btn" id="poAnalyzeBtn" onclick="analyzeOrderPhoto()" disabled>🤖 派副官分析</button>
+      <button class="btn" id="poAnalyzeBtn" onclick="analyzeOrderPhoto()" disabled>🤖 派軍師管家分析</button>
       <button class="btn secondary" onclick="showPage('home')" style="margin-top:8px;">取消</button>
 
       <div id="poResult" style="display:none;margin-top:20px;padding:16px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:12px;">
-        <h3 style="color:#4ade80;margin-bottom:10px;font-size:15px;">✅ 副官分析結果</h3>
+        <h3 style="color:#4ade80;margin-bottom:10px;font-size:15px;">✅ 軍師管家分析結果</h3>
         <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);font-size:14px;">
           <span style="opacity:0.6;">災損等級</span><span style="font-weight:600;color:#FF6B35;" id="poLevel">-</span>
         </div>
@@ -689,7 +689,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   <div class="page" id="page-photo_b2b">
     <div class="card">
       <h2 style="margin-bottom:16px;">🏢 拍店招找 B2B</h2>
-      <p style="font-size:13px;opacity:0.7;margin-bottom:16px;">路上看到一家店覺得有機會？拍下招牌，副官自動建 B2B 候選名單</p>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:16px;">路上看到一家店覺得有機會？拍下招牌，軍師管家自動建 B2B 候選名單</p>
 
       <div class="form-group">
         <label class="form-label">1️⃣ 拍店招</label>
@@ -707,11 +707,11 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
         <textarea class="form-input" id="pbNote" rows="2" placeholder="例：在台中北屯，看起來是新開的早餐店"></textarea>
       </div>
 
-      <button class="btn" id="pbAnalyzeBtn" onclick="analyzeB2BPhoto()" disabled>🤖 副官識別店家</button>
+      <button class="btn" id="pbAnalyzeBtn" onclick="analyzeB2BPhoto()" disabled>🤖 軍師管家識別店家</button>
       <button class="btn secondary" onclick="showPage('home')" style="margin-top:8px;">取消</button>
 
       <div id="pbResult" style="display:none;margin-top:20px;padding:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:12px;">
-        <h3 style="color:#60a5fa;margin-bottom:10px;font-size:15px;">✅ 副官識別結果（可手動修改）</h3>
+        <h3 style="color:#60a5fa;margin-bottom:10px;font-size:15px;">✅ 軍師管家識別結果（可手動修改）</h3>
 
         <div class="form-group">
           <label class="form-label" style="font-size:12px;">店名 *</label>
@@ -756,8 +756,8 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" style="font-size:12px;">副官備註</label>
-          <textarea class="form-input" id="pbAINote" rows="2" placeholder="副官會根據招牌寫初步觀察"></textarea>
+          <label class="form-label" style="font-size:12px;">軍師管家備註</label>
+          <textarea class="form-input" id="pbAINote" rows="2" placeholder="軍師管家會根據招牌寫初步觀察"></textarea>
         </div>
 
         <button class="btn" onclick="confirmB2BLead()" style="margin-top:14px;">✅ 加入 B2B 候選名單</button>
@@ -1768,7 +1768,7 @@ function capturePhoto() {
   input.click();
 }
 
-// ========= 🎨 派副官生圖（image_studio）=========
+// ========= 🎨 派軍師管家生圖（image_studio）=========
 let _imageType = 'b2b_ad';
 
 function setImageType(el) {
@@ -1801,7 +1801,7 @@ async function submitImageRequest() {
       })
     });
     if (r.ok) {
-      toast('✅ 副官接到，5 分鐘後圖到 Telegram');
+      toast('✅ 軍師管家接到，5 分鐘後圖到 Telegram');
       document.getElementById('isTopic').value = '';
       setTimeout(refreshImageHistory, 1500);
     } else {
@@ -1821,7 +1821,7 @@ async function refreshImageHistory() {
     const data = await r.json();
     const list = document.getElementById('isHistoryList');
     if (!Array.isArray(data) || data.length === 0) {
-      list.innerHTML = '<div class="empty"><p style="font-size:13px;">還沒派過副官生圖</p></div>';
+      list.innerHTML = '<div class="empty"><p style="font-size:13px;">還沒派過軍師管家生圖</p></div>';
       return;
     }
     const emojiMap = { pending: '⏳', processing: '🔄', done: '✅', failed: '❌' };
@@ -1892,7 +1892,7 @@ async function analyzeOrderPhoto() {
 
   const desc = document.getElementById('poDesc').value.trim();
   const btn = document.getElementById('poAnalyzeBtn');
-  btn.disabled = true; btn.textContent = '🔍 副官分析中...';
+  btn.disabled = true; btn.textContent = '🔍 軍師管家分析中...';
 
   const prompt = `你是 LAYSHOW 雷修平台的 AI 派工專家。
 請看這張照片並分析家居維修問題。
@@ -1954,7 +1954,7 @@ T0=重大災情 T1=緊急 T2=一般 T3=養護 T4=美化
     toast('❌ ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '🤖 派副官分析';
+    btn.textContent = '🤖 派軍師管家分析';
   }
 }
 
@@ -1991,7 +1991,7 @@ async function showB2BDetails() {
     for (const item of data.slice(0, 5)) {
       html += `  • ${item.store_name} (${stageLabel[item.pipeline_stage]||item.pipeline_stage})\n`;
     }
-    html += `\n🎯 副官提醒：拍店招路上找 B2B → 主畫面「🏢 拍店招找 B2B」`;
+    html += `\n🎯 軍師管家提醒：拍店招路上找 B2B → 主畫面「🏢 拍店招找 B2B」`;
     alert(html);
   } catch (e) { toast('❌ ' + e.message); }
 }
@@ -2041,7 +2041,7 @@ async function analyzeB2BPhoto() {
 
   const note = document.getElementById('pbNote').value.trim();
   const btn = document.getElementById('pbAnalyzeBtn');
-  btn.disabled = true; btn.textContent = '🔍 副官識別中...';
+  btn.disabled = true; btn.textContent = '🔍 軍師管家識別中...';
 
   const prompt = `你是 LAYSHOW 雷修平台的 B2B 業務助理。
 請從這張店招照片識別店家資訊。
@@ -2057,7 +2057,7 @@ ${note ? `補充：${note}` : ''}
   "address": "地址（若可見，沒有就空字串）",
   "city": "縣市（猜測）",
   "district": "行政區（猜測）",
-  "ai_note": "副官觀察：店招狀態、店面規模、可能維護需求等（50 字內）"
+  "ai_note": "軍師管家觀察：店招狀態、店面規模、可能維護需求等（50 字內）"
 }
 
 只回 JSON，不要其他文字。`;
@@ -2103,7 +2103,7 @@ ${note ? `補充：${note}` : ''}
     toast('❌ ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '🤖 副官識別店家';
+    btn.textContent = '🤖 軍師管家識別店家';
   }
 }
 
@@ -2127,7 +2127,7 @@ async function confirmB2BLead() {
     notes: document.getElementById('pbAINote').value.trim() || null,
     pipeline_stage: 'lead',
     source: 'pwa_photo_signboard',
-    source_detail: '手機拍店招由副官 AI 識別',
+    source_detail: '手機拍店招由軍師管家 AI 識別',
   };
 
   try {
@@ -2249,7 +2249,7 @@ async function refreshTop3() {
       todos.push({
         emoji: '📸',
         title: '路上看到 1 家店就拍店招',
-        sub: '副官 AI 自動加進 B2B pipeline',
+        sub: '軍師管家 AI 自動加進 B2B pipeline',
         act: () => showPage('photo_b2b')
       });
     }
@@ -2309,7 +2309,7 @@ async function askStrategist() {
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 1500,
-        system: `你是 LAYSHOW 雷修的軍師管家（不是副官）。老闆林逸霆剛從低谷重新站起。
+        system: `你是 LAYSHOW 雷修的軍師管家（不是軍師管家）。老闆林逸霆剛從低谷重新站起。
 你是「軍師（戰略）+ 管家（系統）」二合一。
 LAYSHOW 戰略：唯一 7 日保固維修平台，主戰場 B2B（30 家 pipeline）。
 語氣：簡潔有溫度，像並肩哥們但專業。
@@ -2429,7 +2429,7 @@ function updateGreet() {
   document.getElementById('greet').textContent = `${g}，${new Date().getMonth()+1}/${new Date().getDate()} (週${wkd})`;
 }
 
-// ============ 副官晨報儀表板 ============
+// ============ 軍師管家晨報儀表板 ============
 async function refreshCommanderDash() {
   const s = getS();
   if (!s.supabaseKey) return;
@@ -2545,11 +2545,11 @@ async function refreshCommanderDash() {
     </div>`);
   }
   if (qSent > 0) {
-    cards.push(`<div class="urgent-card info" onclick="showPage('mileage')">
+    cards.push(`<div class="urgent-card info" onclick="location.href='crawler_pool.html'">
       <span class="ic">📞</span>
       <div class="body">
         <div class="tt">待跟進客戶</div>
-        <div class="sb">爬蟲已留言 → 等你私訊</div>
+        <div class="sb">爬蟲已留言 → 點開客戶池私訊</div>
       </div>
       <span class="cnt">${qSent}</span>
     </div>`);
@@ -2558,10 +2558,10 @@ async function refreshCommanderDash() {
   ua.innerHTML = cards.length ? `<div class="section-title" style="margin-top:14px;">🔥 急迫待辦</div>${cards.join('')}` : '';
 }
 
-// 更新副官打招呼
+// 更新軍師管家打招呼
 function updateCommanderGreet() {
   const h = new Date().getHours();
-  let g = '副官待命中';
+  let g = '軍師管家待命中';
   if (h >= 5 && h < 9) g = '☀️ 早安逸霆，準備好了嗎？';
   else if (h >= 9 && h < 12) g = '💪 加把勁，今天會是好日子';
   else if (h >= 12 && h < 14) g = '🍱 午餐時間，記得休息';
