@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0c2340">
+<meta name="color-scheme" content="light only">
+<title>📚 LAYSHOW SEO 文章庫</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #F37021; --dark: #0c2340; --bg: #f8fafc; --card: #ffffff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+}
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 60px; }
+.header {
+  background: linear-gradient(135deg, #ea580c, #c2410c);
+  color: white; padding: 24px 16px; border-radius: 20px;
+  margin: -16px -16px 20px; position: relative; overflow: hidden;
+}
+.header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; background: white; opacity: 0.1; }
+.header h1 { font-size: 22px; font-weight: 800; }
+.header .sub { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 16px; }
+.stat { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 10px 12px; border-radius: 10px; }
+.stat .label { font-size: 10px; opacity: 0.85; }
+.stat .val { font-size: 18px; font-weight: 800; margin-top: 2px; }
+
+.article-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: all 0.15s;
+  display: block; text-decoration: none; color: var(--text);
+}
+.article-card:active { transform: scale(0.98); }
+.article-card .badge {
+  display: inline-block; background: linear-gradient(135deg, #ea580c, #c2410c);
+  color: white; font-size: 11px; padding: 2px 8px; border-radius: 8px;
+  font-weight: 700; margin-bottom: 6px;
+}
+.article-card .title { font-size: 15px; font-weight: 700; margin-bottom: 4px; line-height: 1.4; }
+.article-card .meta { font-size: 11px; color: var(--text-muted); }
+.article-card .tags { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+.article-card .tag { font-size: 10px; background: var(--bg); padding: 2px 7px; border-radius: 7px; color: var(--text-muted); }
+
+.section-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 16px 0 8px; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); display: flex; padding: 8px 0; z-index: 100; max-width: 480px; margin: 0 auto; }
+.nav-item { flex: 1; text-align: center; padding: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
+.nav-item.active { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>📚 SEO 文章庫</h1>
+    <div class="sub">軍師管家寫，已上 layshow.com.tw/blog</div>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">文章數</div>
+        <div class="val">12 篇</div>
+      </div>
+      <div class="stat">
+        <div class="label">總字數</div>
+        <div class="val">~ 24,000</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">🔥 熱門 SEO 文章（12 篇）</div>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/cold-ac-not-cold-7-reasons" target="_blank">
+    <div class="badge">#01 入門推薦</div>
+    <div class="title">冷氣不冷？台中專業修繕師傅整理 7 個常見原因</div>
+    <div class="meta">2026-06-05 · 8,333 字 · 主關鍵字「冷氣不冷」</div>
+    <div class="tags"><span class="tag">冷氣</span><span class="tag">台中</span><span class="tag">維修</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/02-shui-qi-tiao-diao-8-reasons-taichung" target="_blank">
+    <div class="badge">#02</div>
+    <div class="title">熱水器跳掉？台中專業修繕師傅整理 8 個常見原因</div>
+    <div class="meta">2026-06-07 · 9,574 字 · 主關鍵字「熱水器跳掉」</div>
+    <div class="tags"><span class="tag">熱水器</span><span class="tag">台中</span><span class="tag">跳電</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/03-shui-guan-du-sai-taichung" target="_blank">
+    <div class="badge">#03</div>
+    <div class="title">台中水管堵塞通水費用：5 種堵塞原因 + 透明費用對照</div>
+    <div class="meta">2026-06-07 · 8,752 字 · 主關鍵字「水管堵塞」</div>
+    <div class="tags"><span class="tag">水管</span><span class="tag">台中</span><span class="tag">費用</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/04-tiaodian-8-reasons-taichung" target="_blank">
+    <div class="badge">#04</div>
+    <div class="title">台中跳電怎麼辦？8 個跳電原因 + 自己檢查 SOP</div>
+    <div class="meta">2026-06-07 · 9,233 字 · 主關鍵字「跳電」</div>
+    <div class="tags"><span class="tag">跳電</span><span class="tag">台中</span><span class="tag">SOP</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/05-matong-butong-taichung" target="_blank">
+    <div class="badge">#05</div>
+    <div class="title">馬桶不通怎麼通？台中通馬桶費用 + 6 種方法</div>
+    <div class="meta">2026-06-07 · 8,508 字 · 主關鍵字「馬桶不通」</div>
+    <div class="tags"><span class="tag">馬桶</span><span class="tag">台中</span><span class="tag">通馬桶</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/06-biai-chuli-taichung" target="_blank">
+    <div class="badge">#06</div>
+    <div class="title">壁癌怎麼處理？台中專業壁癌 5 步驟修復法</div>
+    <div class="meta">2026-06-07 · ~9,000 字 · 主關鍵字「壁癌」</div>
+    <div class="tags"><span class="tag">壁癌</span><span class="tag">台中</span><span class="tag">修復</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/07-quanwu-peidian-taichung" target="_blank">
+    <div class="badge">#07</div>
+    <div class="title">全屋配電翻新台中費用：5 種預算方案 + 注意事項</div>
+    <div class="meta">2026-06-07 · ~9,000 字 · 主關鍵字「全屋配電」</div>
+    <div class="tags"><span class="tag">配電</span><span class="tag">台中</span><span class="tag">翻新</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/08-lengqi-anzhuang-taichung" target="_blank">
+    <div class="badge">#08</div>
+    <div class="title">台中冷氣安裝費用全攻略：8 種變頻冷氣價格 + 注意事項</div>
+    <div class="meta">2026-06-07 · ~9,500 字 · 主關鍵字「冷氣安裝」</div>
+    <div class="tags"><span class="tag">冷氣</span><span class="tag">台中</span><span class="tag">安裝</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/09-reshuiqi-xuangou-taichung" target="_blank">
+    <div class="badge">#09</div>
+    <div class="title">熱水器選購指南台中：瓦斯 vs 電熱水器費用對照 + 安裝</div>
+    <div class="meta">2026-06-07 · ~9,000 字 · 主關鍵字「熱水器選購」</div>
+    <div class="tags"><span class="tag">熱水器</span><span class="tag">台中</span><span class="tag">選購</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/10-chushiji-taichung" target="_blank">
+    <div class="badge">#10</div>
+    <div class="title">台中除濕機推薦 5 大品牌：濕度控制 + 用電對照</div>
+    <div class="meta">2026-06-07 · ~9,000 字 · 主關鍵字「除濕機推薦」</div>
+    <div class="tags"><span class="tag">除濕機</span><span class="tag">台中</span><span class="tag">推薦</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/11-wuding-loushui-taichung" target="_blank">
+    <div class="badge">#11</div>
+    <div class="title">屋頂漏水如何處理？台中防水抓漏 6 步驟</div>
+    <div class="meta">2026-06-07 · ~9,000 字 · 主關鍵字「屋頂漏水」</div>
+    <div class="tags"><span class="tag">屋頂</span><span class="tag">台中</span><span class="tag">防水</span></div>
+  </a>
+
+  <a class="article-card" href="https://layshow.com.tw/blog/12-jianshiqi-taichung" target="_blank">
+    <div class="badge">#12</div>
+    <div class="title">台中監視器安裝全攻略：5 種品牌 + 防盜系統推薦</div>
+    <div class="meta">2026-06-07 · ~9,000 字 · 主關鍵字「監視器安裝」</div>
+    <div class="tags"><span class="tag">監視器</span><span class="tag">台中</span><span class="tag">防盜</span></div>
+  </a>
+
+  <div class="section-title">🛡️ 軍師管家承諾</div>
+  <div class="article-card" style="cursor: default; background: linear-gradient(135deg, #fff7ed, #fffbeb);">
+    <div class="title">每週日 21:00 雲端 Routine 自動寫 1 篇</div>
+    <div class="meta">SEO 內容官 24h 在工作 · 每月 + 4 篇 · 半年累積 + 24 篇</div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <div class="nav-item" onclick="location.href='index.html'">🏠 主頁</div>
+  <div class="nav-item" onclick="location.href='army.html'">🎖️ 軍團</div>
+  <div class="nav-item active">📚 SEO</div>
+  <div class="nav-item" onclick="location.href='crawler_pool.html'">📍 客戶池</div>
+</nav>
+
+</body>
+</html>
