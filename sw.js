@@ -1,6 +1,6 @@
-// LAYSHOW Personal OS Service Worker v7 (2026-06-07)
-// v7: 加 拍店招找 B2B 功能
-const CACHE_VERSION = 'layshow-os-v7-' + new Date().toISOString().slice(0, 10);
+// LAYSHOW Personal OS Service Worker v8 (2026-06-07)
+// v8: 加 拍店招找 B2B 功能
+const CACHE_VERSION = 'layshow-os-v8-' + new Date().toISOString().slice(0, 10);
 
 self.addEventListener('install', e => {
   console.log('[SW] Installing', CACHE_VERSION);
