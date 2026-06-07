@@ -88,9 +88,15 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   </div>
 
   <div id="armyList" class="loading">載入軍團中...</div>
+
+  <!-- 軍團最近 5 筆作戰日誌 -->
+  <div class="tier-section" style="margin-top: 24px;">
+    <div class="tier-title">📋 軍團最近 10 筆戰報</div>
+    <div id="armyLogs" class="loading">載入戰報中...</div>
+  </div>
 </div>
 
-<button class="refresh-btn" onclick="loadArmy()">🔄</button>
+<button class="refresh-btn" onclick="loadAll()">🔄</button>
 
 <nav class="bottom-nav">
   <div class="nav-item" onclick="location.href='index.html'">🏠 主頁</div>
@@ -194,12 +200,67 @@ function renderArmy(officers) {
 }
 
 function showOfficer(code) {
-  // TODO: officer detail view
-  alert(`兵種詳情：${code}\n（v2 開發中）`);
+  const officer = (window._lastOfficers || []).find(o => o.code === code);
+  if (!officer) return alert(code);
+  const lastSeen = officer.last_active_at ? new Date(officer.last_active_at).toLocaleString('zh-TW') : '尚未啟動';
+  const info = `${OFFICER_EMOJI[code] || '⚙️'} ${officer.name_zh}\n\n` +
+    `Tier: ${officer.tier}\n` +
+    `部署: ${officer.deployment}\n` +
+    `狀態: ${officer.status}\n` +
+    `上次活動: ${lastSeen}\n` +
+    `24h 任務: ${officer.runs_24h || 0}\n` +
+    `7d 成功: ${officer.success_7d || 0}\n` +
+    `7d 失敗: ${officer.failed_7d || 0}\n` +
+    `7d 處理: ${officer.items_7d || 0}\n` +
+    `月費: NT$ ${officer.cost_estimate_ntd || 0}`;
+  alert(info);
 }
 
-loadArmy();
-setInterval(loadArmy, 60000); // refresh every 60s
+async function loadArmyLogs() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/agent_logs?select=agent_code,started_at,status,items_processed,notes&order=started_at.desc&limit=10`, {
+      headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+    });
+    const logs = await r.json();
+    if (!logs.length) {
+      document.getElementById('armyLogs').innerHTML = '<div class="empty">尚無作戰紀錄</div>';
+      return;
+    }
+    let html = '';
+    for (const log of logs) {
+      const time = new Date(log.started_at).toLocaleTimeString('zh-TW', {hour: '2-digit', minute: '2-digit'});
+      const date = new Date(log.started_at).toLocaleDateString('zh-TW', {month: 'numeric', day: 'numeric'});
+      const emoji = OFFICER_EMOJI[log.agent_code] || '⚙️';
+      const statusEmoji = {success: '✅', failed: '❌', skipped: '⏸️', skipped_family_time: '👨‍👧', low_signal: '🌫️'}[log.status] || '🔵';
+      html += `<div class="officer-card">
+        <div class="emoji">${emoji}</div>
+        <div class="info">
+          <div class="name">${log.agent_code}</div>
+          <div class="meta">${date} ${time} · 處理 ${log.items_processed || 0} 項${log.notes ? ' · ' + log.notes.substring(0, 30) : ''}</div>
+        </div>
+        <span class="status active">${statusEmoji}</span>
+      </div>`;
+    }
+    document.getElementById('armyLogs').innerHTML = html;
+  } catch (e) {
+    document.getElementById('armyLogs').innerHTML = `<div class="empty">載入失敗：${e.message}</div>`;
+  }
+}
+
+async function loadAll() {
+  await loadArmy();
+  await loadArmyLogs();
+}
+
+// Cache officers for detail view
+const _origRender = renderArmy;
+renderArmy = function(data) {
+  window._lastOfficers = data;
+  _origRender(data);
+};
+
+loadAll();
+setInterval(loadAll, 60000); // refresh every 60s
 </script>
 </body>
 </html>
