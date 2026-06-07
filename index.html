@@ -295,6 +295,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <div class="action purple" onclick="showPage('draft_reply')"><span class="emoji">🤖</span><div class="name">AI 草擬回覆</div></div>
       <div class="action" style="background:linear-gradient(135deg,#FF6B35,#FF8C5A);color:#fff;" onclick="showPage('image_studio')"><span class="emoji">🎨</span><div class="name">派副官生圖</div></div>
       <div class="action success" onclick="showPage('photo_order')"><span class="emoji">📸</span><div class="name">拍照建單</div></div>
+      <div class="action" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;" onclick="showPage('photo_b2b')"><span class="emoji">🏢</span><div class="name">拍店招找 B2B</div></div>
     </div>
 
     <div class="section-title">⚡ 快速指令</div>
@@ -644,6 +645,86 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
           <div id="poSolution" style="font-size:13px;line-height:1.5;"></div>
         </div>
         <button class="btn" onclick="confirmCreateOrder()" style="margin-top:14px;">✅ 建立工單草稿</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 🏢 拍店招找 B2B（photo_b2b）===== -->
+  <div class="page" id="page-photo_b2b">
+    <div class="card">
+      <h2 style="margin-bottom:16px;">🏢 拍店招找 B2B</h2>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:16px;">路上看到一家店覺得有機會？拍下招牌，副官自動建 B2B 候選名單</p>
+
+      <div class="form-group">
+        <label class="form-label">1️⃣ 拍店招</label>
+        <label for="pbPhoto" id="pbPhotoArea" style="display:block;border:2px dashed rgba(255,255,255,0.2);border-radius:14px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(0,0,0,0.15);">
+          <div style="font-size:50px;" id="pbIcon">🏢</div>
+          <div style="font-size:14px;margin-top:8px;" id="pbLabel">點此拍店招或選圖</div>
+          <div style="font-size:11px;opacity:0.5;margin-top:6px;" id="pbHint">拍清楚店名 + 招牌即可</div>
+          <img id="pbPreview" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px;display:none;" alt="">
+        </label>
+        <input type="file" id="pbPhoto" accept="image/*" capture="environment" style="display:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">2️⃣ 補充（選填）</label>
+        <textarea class="form-input" id="pbNote" rows="2" placeholder="例：在台中北屯，看起來是新開的早餐店"></textarea>
+      </div>
+
+      <button class="btn" id="pbAnalyzeBtn" onclick="analyzeB2BPhoto()" disabled>🤖 副官識別店家</button>
+      <button class="btn secondary" onclick="showPage('home')" style="margin-top:8px;">取消</button>
+
+      <div id="pbResult" style="display:none;margin-top:20px;padding:16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:12px;">
+        <h3 style="color:#60a5fa;margin-bottom:10px;font-size:15px;">✅ 副官識別結果（可手動修改）</h3>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;">店名 *</label>
+          <input type="text" class="form-input" id="pbStoreName" placeholder="例：阿姨早午餐">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;">店家類型 *</label>
+          <select class="form-input" id="pbStoreType">
+            <option value="restaurant">🍴 餐飲</option>
+            <option value="cafe">☕ 咖啡/早午餐</option>
+            <option value="clinic">🏥 診所</option>
+            <option value="bnb">🏠 民宿</option>
+            <option value="retail">🛒 零售</option>
+            <option value="beauty">💇 美容/美髮</option>
+            <option value="education">🎓 教育/補習</option>
+            <option value="office">💼 辦公室</option>
+            <option value="other">📌 其他</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px;">電話</label>
+            <input type="text" class="form-input" id="pbContactPhone" placeholder="04-...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px;">聯絡人</label>
+            <input type="text" class="form-input" id="pbContactName" placeholder="老闆">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;">地址（看到的話）</label>
+          <input type="text" class="form-input" id="pbAddress" placeholder="例：台中市北屯區...">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px;">縣市</label>
+            <input type="text" class="form-input" id="pbCity" placeholder="台中市">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px;">行政區</label>
+            <input type="text" class="form-input" id="pbDistrict" placeholder="北屯區">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;">副官備註</label>
+          <textarea class="form-input" id="pbAINote" rows="2" placeholder="副官會根據招牌寫初步觀察"></textarea>
+        </div>
+
+        <button class="btn" onclick="confirmB2BLead()" style="margin-top:14px;">✅ 加入 B2B 候選名單</button>
       </div>
     </div>
   </div>
@@ -1839,6 +1920,162 @@ T0=重大災情 T1=緊急 T2=一般 T3=養護 T4=美化
     btn.disabled = false;
     btn.textContent = '🤖 派副官分析';
   }
+}
+
+// ========= 🏢 拍店招找 B2B（photo_b2b）=========
+let _b2bPhotoBase64 = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pbPhoto = document.getElementById('pbPhoto');
+  if (pbPhoto) pbPhoto.addEventListener('change', handleB2BPhoto);
+});
+
+async function handleB2BPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('❌ 圖片太大'); return; }
+
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    img.onload = () => {
+      const maxW = 1600;
+      const scale = Math.min(maxW / img.width, 1);
+      const w = img.width * scale, h = img.height * scale;
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = c.toDataURL('image/jpeg', 0.85);
+      _b2bPhotoBase64 = compressed.split(',')[1];
+      const preview = document.getElementById('pbPreview');
+      preview.src = compressed;
+      preview.style.display = 'block';
+      document.getElementById('pbIcon').style.display = 'none';
+      document.getElementById('pbLabel').textContent = '✅ 已選擇';
+      document.getElementById('pbHint').style.display = 'none';
+      document.getElementById('pbAnalyzeBtn').disabled = false;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeB2BPhoto() {
+  if (!_b2bPhotoBase64) { toast('⚠️ 請先拍店招'); return; }
+  const s = getS();
+  if (!s.anthropicKey) { toast('⚠️ 先到設定貼 Anthropic Key'); showPage('settings'); return; }
+
+  const note = document.getElementById('pbNote').value.trim();
+  const btn = document.getElementById('pbAnalyzeBtn');
+  btn.disabled = true; btn.textContent = '🔍 副官識別中...';
+
+  const prompt = `你是 LAYSHOW 雷修平台的 B2B 業務助理。
+請從這張店招照片識別店家資訊。
+
+${note ? `補充：${note}` : ''}
+
+請以 JSON 格式回覆：
+{
+  "store_name": "店名（招牌主文字）",
+  "store_type": "restaurant/cafe/clinic/bnb/retail/beauty/education/office/other 其中一個",
+  "store_type_label": "店家類型中文（如：餐飲、咖啡、診所）",
+  "phone": "電話（若招牌可見，沒有就空字串）",
+  "address": "地址（若可見，沒有就空字串）",
+  "city": "縣市（猜測）",
+  "district": "行政區（猜測）",
+  "ai_note": "副官觀察：店招狀態、店面規模、可能維護需求等（50 字內）"
+}
+
+只回 JSON，不要其他文字。`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: _b2bPhotoBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!r.ok) { toast('❌ Claude API 失敗'); return; }
+    const data = await r.json();
+    const text = data.content[0].text;
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) { toast('❌ AI 回應格式錯誤'); return; }
+    const result = JSON.parse(m[0]);
+
+    document.getElementById('pbStoreName').value = result.store_name || '';
+    document.getElementById('pbStoreType').value = result.store_type || 'other';
+    document.getElementById('pbContactPhone').value = result.phone || '';
+    document.getElementById('pbAddress').value = result.address || '';
+    document.getElementById('pbCity').value = result.city || '';
+    document.getElementById('pbDistrict').value = result.district || '';
+    document.getElementById('pbAINote').value = result.ai_note || '';
+    document.getElementById('pbResult').style.display = 'block';
+    document.getElementById('pbResult').scrollIntoView({behavior:'smooth'});
+  } catch (e) {
+    toast('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 副官識別店家';
+  }
+}
+
+async function confirmB2BLead() {
+  const s = getS();
+  const storeName = document.getElementById('pbStoreName').value.trim();
+  const storeType = document.getElementById('pbStoreType').value;
+  const phone = document.getElementById('pbContactPhone').value.trim();
+
+  if (!storeName) { toast('⚠️ 店名必填'); return; }
+  if (!phone) { toast('⚠️ 電話必填（業務跟進用）'); return; }
+
+  const payload = {
+    store_name: storeName,
+    store_type: storeType,
+    contact_phone: phone,
+    contact_name: '老闆',  // B2B schema needs this NOT NULL，預設「老闆」
+    address: document.getElementById('pbAddress').value.trim() || null,
+    city: document.getElementById('pbCity').value.trim() || null,
+    district: document.getElementById('pbDistrict').value.trim() || null,
+    notes: document.getElementById('pbAINote').value.trim() || null,
+    pipeline_stage: 'lead',
+    source: 'pwa_photo_signboard',
+    source_detail: '手機拍店招由副官 AI 識別',
+  };
+
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/b2b_applications`, {
+      method: 'POST',
+      headers: {
+        'apikey': s.supabaseKey,
+        'Authorization': `Bearer ${s.supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      const data = await r.json();
+      toast('✅ B2B 候選已加入：' + storeName);
+      setTimeout(() => showPage('home'), 1500);
+    } else {
+      const t = await r.text();
+      toast('❌ ' + t.slice(0,80));
+    }
+  } catch (e) { toast('❌ ' + e.message); }
 }
 
 async function confirmCreateOrder() {
