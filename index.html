@@ -249,6 +249,23 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
           <div class="lbl">VIP 在線</div>
         </div>
       </div>
+
+      <!-- ===== 🏢 B2B 戰況卡（2026-06-07 新加：核心戰場）===== -->
+      <div style="margin-top:16px;padding:14px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;" onclick="showB2BDetails()">
+        <div style="flex:1;">
+          <div style="font-size:11px;opacity:0.9;letter-spacing:1px;">🎯 LAYSHOW 主戰場</div>
+          <div style="font-size:15px;font-weight:800;margin-top:2px;">B2B 月費客戶</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;opacity:0.85;">MRR</div>
+          <div style="font-size:22px;font-weight:900;" id="b2bMRR">NT$ -</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;opacity:0.85;">候選</div>
+          <div style="font-size:22px;font-weight:900;" id="b2bLeads">-</div>
+        </div>
+        <span style="font-size:20px;opacity:0.7;">→</span>
+      </div>
     </div>
 
     <!-- ====== 副官對話突顯入口 ====== -->
@@ -1922,6 +1939,44 @@ T0=重大災情 T1=緊急 T2=一般 T3=養護 T4=美化
   }
 }
 
+// ========= 🏢 B2B 戰況快速查看 =========
+async function showB2BDetails() {
+  const s = getS();
+  if (!s.supabaseKey) { toast('⚠️ 先設定 Supabase'); return; }
+  try {
+    const sBase = `${s.supabaseUrl}/rest/v1`;
+    const sH = { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` };
+    const r = await fetch(`${sBase}/b2b_applications?order=created_at.desc&limit=20`, {headers: sH});
+    const data = r.ok ? await r.json() : [];
+
+    const byStage = {};
+    let mrr = 0;
+    for (const item of (Array.isArray(data) ? data : [])) {
+      const st = item.pipeline_stage || 'lead';
+      byStage[st] = (byStage[st] || 0) + 1;
+      if (st === 'active' || st === 'paid') mrr += Number(item.monthly_recurring_revenue) || 0;
+    }
+
+    const stageLabel = {
+      lead: '🟡 候選', contacted: '🔵 已聯絡', interested: '🟢 有興趣',
+      demo: '🎯 試用中', active: '✅ 簽約中', paid: '💰 月費中',
+      lost: '❌ 流失', churned: '⚠️ 退訂'
+    };
+
+    let html = `🏢 LAYSHOW B2B 戰況\n══════════════\n💰 當前 MRR：NT$ ${mrr.toLocaleString()}/月\n\n📊 漏斗分佈：\n`;
+    for (const [stage, label] of Object.entries(stageLabel)) {
+      const cnt = byStage[stage] || 0;
+      if (cnt > 0) html += `  ${label}：${cnt} 家\n`;
+    }
+    html += `\n📋 最新 5 家：\n`;
+    for (const item of data.slice(0, 5)) {
+      html += `  • ${item.store_name} (${stageLabel[item.pipeline_stage]||item.pipeline_stage})\n`;
+    }
+    html += `\n🎯 副官提醒：拍店招路上找 B2B → 主畫面「🏢 拍店招找 B2B」`;
+    alert(html);
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
 // ========= 🏢 拍店招找 B2B（photo_b2b）=========
 let _b2bPhotoBase64 = null;
 
@@ -2266,6 +2321,25 @@ async function refreshCommanderDash() {
   document.getElementById('kpiUrgent').textContent = urgent;
   document.getElementById('kpiQuote').textContent = qPending;
   document.getElementById('kpiVip').textContent = vip;
+
+  // ===== B2B 戰況（核心戰場）=====
+  try {
+    const sBase = `${s.supabaseUrl}/rest/v1`;
+    const sH = { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` };
+
+    // MRR：所有 paid B2B 的 monthly_recurring_revenue 加總
+    const mrrR = await fetch(`${sBase}/b2b_applications?pipeline_stage=in.(active,paid)&select=monthly_recurring_revenue`, {headers: sH});
+    const mrrData = mrrR.ok ? await mrrR.json() : [];
+    const mrr = Array.isArray(mrrData) ? mrrData.reduce((s, x) => s + (Number(x.monthly_recurring_revenue) || 0), 0) : 0;
+
+    // 候選：lead + contacted + interested
+    const leadsR = await fetch(`${sBase}/b2b_applications?pipeline_stage=in.(lead,contacted,interested,demo)&select=id`, {headers: sH});
+    const leadsData = leadsR.ok ? await leadsR.json() : [];
+    const leadsCount = Array.isArray(leadsData) ? leadsData.length : 0;
+
+    document.getElementById('b2bMRR').textContent = mrr > 0 ? 'NT$' + (mrr >= 10000 ? Math.round(mrr/1000) + 'k' : Math.round(mrr)) : 'NT$ 0';
+    document.getElementById('b2bLeads').textContent = leadsCount;
+  } catch (e) {}
 
   // 急迫客戶 → 紅色閃爍
   const urgentCard = document.getElementById('kpiUrgentCard');
