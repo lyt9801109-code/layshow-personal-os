@@ -309,6 +309,16 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <span class="arr">→</span>
     </div>
 
+    <!-- ====== 派 B2B 戰情官（NEW，按一下找 5 家） ====== -->
+    <div class="commander-chat" style="background: linear-gradient(135deg, #0891b2, #0e7490);" onclick="dispatchB2BOfficer()">
+      <span class="av">💼</span>
+      <div class="txt">
+        <div class="ti" id="b2bDispatchTitle">派 B2B 戰情官出擊</div>
+        <div class="sb" id="b2bDispatchSub">30 秒找 5 家台中 B2B 候選 + 客製話術</div>
+      </div>
+      <span class="arr" id="b2bDispatchArr">⚡</span>
+    </div>
+
     <!-- ====== 急迫待辦（自動顯示） ====== -->
     <div id="urgentArea"></div>
 
@@ -1660,6 +1670,134 @@ const ASK_EXAMPLES = [
 function setAskExample(i) {
   document.getElementById('askText').value = ASK_EXAMPLES[i];
 }
+// 軍團共用 Supabase 端點
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMjg2ODAsImV4cCI6MjAyOTYwNDY4MH0.Sh7tNILJaUSPzqLGN3-AXZ2hdkTLpKjF54hMmJ_b-Uk';
+
+// 派 B2B 戰情官出擊（PWA 一鍵呼叫）
+async function dispatchB2BOfficer() {
+  const s = getS();
+  if (!s.anthropicKey) {
+    toast('⚠️ 請先到「設定」貼 Anthropic API Key');
+    showPage('settings');
+    return;
+  }
+
+  const titleEl = document.getElementById('b2bDispatchTitle');
+  const subEl = document.getElementById('b2bDispatchSub');
+  const arrEl = document.getElementById('b2bDispatchArr');
+  titleEl.textContent = '戰情官出擊中...';
+  subEl.textContent = '30 秒內找 5 家候選 + 推 Telegram';
+  arrEl.textContent = '⏳';
+
+  try {
+    // Step 1: 查既有 b2b_applications
+    const existRes = await fetch('https://ujaogedhwcbyczzpgzpy.supabase.co/rest/v1/b2b_applications?select=store_name&limit=200', {
+      headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+    });
+    const existing = (await existRes.json()).map(x => x.store_name);
+
+    // Step 2: Claude 生成 5 家
+    const prompt = `你是 LAYSHOW B2B 戰情官，幫夥伴林逸霆找 5 家台中 NEW B2B 候選（不重複以下：${JSON.stringify(existing.slice(0,80))}）。
+產業：民宿/餐廳/補習班/診所/不動產。
+區域優先：北屯、西屯、南屯。
+回傳純 JSON array，每個含：store_name, store_type(minsu/restaurant/school/clinic/rental), district, opening_script(50字內), priority_score(1-10)。不要任何說明文字。`;
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    const d = await r.json();
+    let text = d.content?.[0]?.text || '';
+    if (text.startsWith('```')) {
+      text = text.split('```')[1];
+      if (text.startsWith('json')) text = text.substring(4);
+    }
+    text = text.trim();
+    const candidates = JSON.parse(text);
+
+    // Step 3: 寫進 Supabase
+    let written = 0;
+    for (const c of candidates) {
+      const data = {
+        store_name: c.store_name,
+        store_type: c.store_type || 'other',
+        contact_name: '待夥伴聯絡確認',
+        contact_phone: '查 Google Maps',
+        city: '台中市',
+        district: c.district,
+        pipeline_stage: 'lead',
+        source: 'b2b_intel_officer',
+        source_detail: `PWA 派遣 ${new Date().toLocaleString('zh-TW')}`,
+        notes: `話術：${c.opening_script}｜評分：${c.priority_score}/10`,
+      };
+      try {
+        const wr = await fetch('https://ujaogedhwcbyczzpgzpy.supabase.co/rest/v1/b2b_applications', {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON,
+            Authorization: 'Bearer ' + SUPABASE_ANON,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify(data)
+        });
+        if (wr.status === 201 || wr.status === 200) written++;
+      } catch (e) {}
+    }
+
+    // Step 4: 寫 agent_logs
+    await fetch('https://ujaogedhwcbyczzpgzpy.supabase.co/rest/v1/agent_logs', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: 'Bearer ' + SUPABASE_ANON,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        agent_code: 'b2b_intel_officer',
+        run_id: `pwa_dispatch_${Date.now()}`,
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        status: 'success',
+        items_processed: written,
+        notes: 'PWA 夥伴一鍵派遣',
+        output: { candidates: candidates.map(c => c.store_name) }
+      })
+    });
+
+    titleEl.textContent = `✅ 派遣完成：${written} 家寫入`;
+    subEl.textContent = candidates.map(c => `${c.store_name}(${c.priority_score}分)`).join(', ').substring(0, 80);
+    arrEl.textContent = '🎯';
+
+    // 也順便用 Telegram 推（如果 daemon 跑著）
+    await sendCommand('b2b_dispatched', { count: written, source: 'pwa' },
+      `🎖️ B2B 戰情官（PWA 派遣）\n${written} 家候選已寫入：\n${candidates.map(c=>`• ${c.store_name}（${c.district}·${c.priority_score}分）\n   話術：${c.opening_script}`).join('\n')}`);
+
+  } catch (e) {
+    titleEl.textContent = '❌ 派遣失敗';
+    subEl.textContent = e.message.substring(0, 60);
+    arrEl.textContent = '⚠️';
+    toast('❌ ' + e.message);
+  }
+
+  setTimeout(() => {
+    titleEl.textContent = '派 B2B 戰情官出擊';
+    subEl.textContent = '30 秒找 5 家台中 B2B 候選 + 客製話術';
+    arrEl.textContent = '⚡';
+  }, 30000);
+}
+
 async function askClaude() {
   const q = document.getElementById('askText').value.trim();
   if (!q) { toast('⚠️ 寫問題'); return; }
