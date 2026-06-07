@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#F37021">
+<meta name="color-scheme" content="light only">
+<title>🎖️ 跟軍師管家對話</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #F37021; --dark: #0c2340; --bg: #f8fafc; --card: #ffffff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --user-bg: #F37021; --assistant-bg: #ffffff;
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+.header {
+  background: linear-gradient(135deg, var(--dark), #1a4a8a);
+  color: white; padding: 14px 16px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.header .back { font-size: 20px; cursor: pointer; }
+.header .title { flex: 1; }
+.header .title h1 { font-size: 17px; font-weight: 800; }
+.header .title .sub { font-size: 11px; opacity: 0.8; }
+.header .clear { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+
+.messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--bg);
+}
+.msg { max-width: 88%; padding: 12px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+.msg.user { background: var(--user-bg); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg.assistant { background: var(--assistant-bg); color: var(--text); align-self: flex-start; border: 1px solid var(--border); border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.msg.system { background: #f0f9ff; color: #1e40af; align-self: center; font-size: 12px; padding: 6px 12px; border-radius: 12px; }
+.msg .meta { font-size: 10px; opacity: 0.7; margin-top: 4px; }
+.msg.assistant pre { white-space: pre-wrap; word-wrap: break-word; }
+
+.action-result {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1px solid #10b981; padding: 10px 14px; border-radius: 12px;
+  font-size: 13px; align-self: flex-start; max-width: 88%;
+}
+.action-result .head { font-weight: 700; color: #065f46; margin-bottom: 4px; }
+
+.quick-bar {
+  display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto;
+  flex-shrink: 0; background: white; border-top: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.quick-bar::-webkit-scrollbar { display: none; }
+.quick { background: var(--bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 16px; font-size: 12px; white-space: nowrap; cursor: pointer; font-weight: 600; color: var(--text); }
+.quick:active { background: var(--primary); color: white; }
+
+.input-bar {
+  flex-shrink: 0; padding: 10px 12px; background: white; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: flex-end;
+}
+.input-bar textarea {
+  flex: 1; resize: none; max-height: 120px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: 20px;
+  font-size: 14px; font-family: inherit; outline: none;
+}
+.input-bar textarea:focus { border-color: var(--primary); }
+.input-bar .send {
+  background: var(--primary); color: white; border: none;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 20px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.input-bar .send:disabled { opacity: 0.4; }
+
+.typing { background: var(--assistant-bg); border: 1px solid var(--border); padding: 12px 14px; border-radius: 16px; align-self: flex-start; }
+.typing span { display: inline-block; width: 8px; height: 8px; background: var(--text-muted); border-radius: 50%; margin: 0 2px; animation: bounce 1.4s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="back" onclick="location.href='index.html'">←</div>
+  <div class="title">
+    <h1>🎖️ 軍師管家</h1>
+    <div class="sub">Claude Sonnet 4.5 · 可處理 LAYSHOW 平台</div>
+  </div>
+  <button class="clear" onclick="clearChat()">清除</button>
+</div>
+
+<div class="messages" id="messages">
+  <div class="msg system">軍師管家在這。可以直接打字問問題，或點下方快速指令</div>
+  <div class="msg assistant">
+    夥伴早安🌅<br>
+    我可以幫你：<br>
+    • 💼 派 B2B 戰情官（找 5 家候選）<br>
+    • 🏦 派財務官（看 MRR + 進度）<br>
+    • 📊 派監視官（系統健康）<br>
+    • ⚖️ 派法律顧問（法律問題）<br>
+    • 🔍 派競品官（對手分析）<br>
+    • 📝 派 SEO 內容官（寫文章）<br>
+    • 🚨 看 PRIORITY 命中（20w 會員社團）<br>
+    • 💬 問策略 / 寫話術 / 處理客訴<br>
+    • 🔧 處理平台問題（修 bug / 改設定）<br><br>
+    直接打字問我，或點下面快速按鈕
+  </div>
+</div>
+
+<div class="quick-bar">
+  <div class="quick" onclick="quickCmd('派 B2B 戰情官出擊')">💼 派 B2B</div>
+  <div class="quick" onclick="quickCmd('派財務官看當下 MRR 月度進度')">🏦 派財務</div>
+  <div class="quick" onclick="quickCmd('看 PRIORITY 即時命中')">🚨 PRIORITY</div>
+  <div class="quick" onclick="quickCmd('派監視官系統健康檢查')">📊 派監視</div>
+  <div class="quick" onclick="quickCmd('派法律顧問月度法律巡檢')">⚖️ 法律</div>
+  <div class="quick" onclick="quickCmd('派競品官分析 PRO360')">🔍 競品</div>
+  <div class="quick" onclick="quickCmd('客戶說太貴了我怎麼回')">💬 客戶話術</div>
+  <div class="quick" onclick="quickCmd('今天 3 件事建議')">📋 今日重點</div>
+</div>
+
+<div class="input-bar">
+  <textarea id="input" placeholder="打字問軍師管家... (Enter 送出)" rows="1" onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+  <button class="send" id="sendBtn" onclick="send()">➤</button>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMjg2ODAsImV4cCI6MjAyOTYwNDY4MH0.Sh7tNILJaUSPzqLGN3-AXZ2hdkTLpKjF54hMmJ_b-Uk';
+
+// 從 localStorage 拿 anthropic key（與主 PWA 共用）
+const STORAGE_KEY = 'layshow_settings_v1';
+const HISTORY_KEY = 'layshow_chat_history';
+
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+let history = [];
+try { history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { history = []; }
+
+// Restore previous chat
+if (history.length > 0) {
+  const el = document.getElementById('messages');
+  for (const m of history) appendMsg(m.role, m.content, false);
+}
+
+const SYSTEM = `你是 LAYSHOW 雷修平台的軍師管家。
+夥伴林逸霆（不叫「老闆」叫「夥伴」）是創辦人。
+你可以幫他做的事（用文字回答 + 必要時引導他 Quick Action）：
+1. 商業戰略諮詢（B2B、定價、競品）
+2. 客戶話術（客訴/拒絕/促成）
+3. 平台 bug 診斷（給夥伴 SQL/code 改）
+4. 派遣軍團兵種（軍師管家內 17 個兵種）
+5. 寫 SEO/IG 內容
+
+LAYSHOW 17 個兵種：軍師管家、B2B 戰情官、客服官、報價官、爬蟲官、產圖官、影片官、SEO 內容官、旁白官、監視官、競品官、客戶池官、財務官、工單官、法律顧問、推薦碼官、副業官。
+
+夥伴可能會打字派遣兵種（例如「派 B2B」「派財務」），你回應時告訴他「軍師管家已派 X 官出擊，5-30 秒收 Telegram」，然後實際邏輯由 PWA 處理。
+
+語氣：精煉、可執行、不打雞血。繁體中文。
+家人時間 19:00-20:30 全軍團靜音承諾。`;
+
+function appendMsg(role, content, save = true) {
+  const el = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = content.replace(/\n/g, '<br>');
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  if (save) {
+    history.push({ role, content });
+    if (history.length > 50) history = history.slice(-50);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+}
+
+function appendActionResult(text) {
+  const el = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'action-result';
+  div.innerHTML = '<div class="head">✅ 軍團行動結果</div>' + text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function appendTyping() {
+  const el = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing')?.remove(); }
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function onKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+}
+
+function quickCmd(text) {
+  document.getElementById('input').value = text;
+  send();
+}
+
+async function send() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text) return;
+  const s = getSettings();
+  if (!s.anthropicKey) {
+    appendMsg('system', '⚠️ 需要 Anthropic API Key。請到主 PWA 設定貼上。');
+    return;
+  }
+
+  appendMsg('user', text);
+  input.value = '';
+  autoResize(input);
+  document.getElementById('sendBtn').disabled = true;
+  appendTyping();
+
+  // 1. 先檢查是否是兵種派遣指令
+  const intent = detectIntent(text);
+  if (intent) {
+    removeTyping();
+    appendMsg('assistant', '🎖️ 派 ' + intent.label + ' 出擊...');
+    try {
+      const result = await dispatchAgent(intent.code, s.anthropicKey);
+      appendActionResult(result);
+    } catch (e) {
+      appendActionResult('❌ 派遣失敗：' + e.message);
+    }
+    document.getElementById('sendBtn').disabled = false;
+    return;
+  }
+
+  // 2. 否則用 Claude 對話
+  try {
+    const messages = history.filter(m => m.role !== 'system').map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content
+    }));
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2000,
+        system: SYSTEM,
+        messages: messages.slice(-20)
+      })
+    });
+    const d = await r.json();
+    removeTyping();
+    if (d.content && d.content[0]) {
+      appendMsg('assistant', d.content[0].text);
+    } else {
+      appendMsg('assistant', '❌ ' + (d.error?.message || '無回應'));
+    }
+  } catch (e) {
+    removeTyping();
+    appendMsg('assistant', '❌ ' + e.message);
+  }
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function detectIntent(text) {
+  const t = text.toLowerCase();
+  if (/派.*b2b|b2b.*派|找.*b2b|b2b.*候選/.test(text)) return { code: 'b2b', label: 'B2B 戰情官' };
+  if (/派.*財務|財務.*官|mrr|今日.*營收|月度.*營收/.test(text)) return { code: 'finance', label: '財務官' };
+  if (/派.*監視|系統.*健康|監視.*官/.test(text)) return { code: 'monitor', label: '監視官' };
+  if (/派.*法律|法律.*顧問|消保|個資|合約|車禍/.test(text)) return { code: 'legal', label: '法律顧問' };
+  if (/派.*競品|競品.*官|對手.*分析|pro360/.test(text)) return { code: 'competitor', label: '競品官' };
+  if (/priority|看.*命中|看.*警報/.test(text)) return { code: 'priority_view', label: 'PRIORITY 看板' };
+  return null;
+}
+
+async function dispatchAgent(code, anthropicKey) {
+  if (code === 'priority_view') {
+    location.href = 'priority_hits.html';
+    return '已跳轉 PRIORITY 即時看板';
+  }
+
+  if (code === 'b2b') {
+    return await dispatchB2B(anthropicKey);
+  }
+
+  // finance / monitor / legal / competitor 用 Claude 寫報告
+  const configs = {
+    finance: {
+      preFetch: async () => {
+        const today = new Date().toISOString().substring(0,10);
+        const monthStart = today.substring(0,7) + '-01';
+        const todayR = await fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=final_total_amount&paid_at=gte.${today}&status=neq.closed`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        }).then(r => r.json()).catch(() => []);
+        const monthR = await fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=final_total_amount&paid_at=gte.${monthStart}&status=neq.closed`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        }).then(r => r.json()).catch(() => []);
+        const b2bR = await fetch(`${SUPABASE_URL}/rest/v1/b2b_applications?select=pipeline_stage&created_at=gte.${monthStart}`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        }).then(r => r.json()).catch(() => []);
+        const todayRev = todayR.reduce((s,o)=> s + Number(o.final_total_amount||0), 0);
+        const monthRev = monthR.reduce((s,o)=> s + Number(o.final_total_amount||0), 0);
+        return { todayOrders: todayR.length, todayRev, monthRev, b2bLeads: b2bR.filter(x=>x.pipeline_stage==='lead').length };
+      },
+      prompt: d => `今日 ${d.todayOrders} 單 NT$${d.todayRev}，本月累計 NT$${d.monthRev}，月度 B2B Lead ${d.b2bLeads}。寫財務日報 150 字內，含建議行動。距離 NT$30,000 MRR 目標差多少。`,
+      system: 'LAYSHOW 財務官，簡潔數據，繁體中文。'
+    },
+    monitor: {
+      preFetch: async () => ({ }),
+      prompt: () => `寫一份 LAYSHOW 系統健康報告（150字內）。包含可能的風險點和今日該注意的 3 個監測項。`,
+      system: 'LAYSHOW 監視官，戰情語氣，繁體中文。'
+    },
+    legal: {
+      preFetch: async () => ({}),
+      prompt: () => `做一份 LAYSHOW 月度法律巡檢（300字內）：1. 用戶/師傅車禍責任如何切割 2. 個資保護目前可能漏洞 3. 服務條款最新該補。每個重點寫法律規定、風險、明天行動。`,
+      system: 'LAYSHOW 法律顧問，台灣執業，繁體中文。'
+    },
+    competitor: {
+      preFetch: async () => ({}),
+      prompt: () => `分析 LAYSHOW 的主要對手（PRO360、居家通、579、修繕網）：1. 對手最新動態 2. 對 LAYSHOW 威脅評估 3. 反制策略 2 個。300 字內。`,
+      system: 'LAYSHOW 競品官，戰情分析，繁體中文。'
+    }
+  };
+  const cfg = configs[code];
+  if (!cfg) return '未知兵種 ' + code;
+
+  const data = await cfg.preFetch();
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': anthropicKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1500,
+      system: cfg.system,
+      messages: [{ role: 'user', content: cfg.prompt(data) }]
+    })
+  });
+  const result = await r.json();
+  const text = result.content?.[0]?.text || '(空)';
+
+  // Log to agent_logs (anon now allowed)
+  await fetch(`${SUPABASE_URL}/rest/v1/agent_logs`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON,
+      Authorization: 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal'
+    },
+    body: JSON.stringify({
+      agent_code: code === 'finance' ? 'finance_officer' :
+                  code === 'monitor' ? 'monitor_officer' :
+                  code === 'legal' ? 'legal_advisor' : 'competitor_intel_officer',
+      run_id: `chat_${Date.now()}`,
+      started_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      status: 'success',
+      items_processed: 1,
+      output: { preview: text.substring(0,300) },
+      notes: 'PWA 對話派遣'
+    })
+  }).catch(() => {});
+
+  return text;
+}
+
+async function dispatchB2B(anthropicKey) {
+  // 1. 查既有
+  const existRes = await fetch(`${SUPABASE_URL}/rest/v1/b2b_applications?select=store_name&limit=200`, {
+    headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+  });
+  const existing = (await existRes.json()).map(x => x.store_name);
+
+  // 2. Claude 寫
+  const prompt = `找 5 家 NEW 台中 B2B 候選（不重複：${JSON.stringify(existing.slice(0,80))}）。產業：民宿/餐廳/補習班/診所/不動產。回傳純 JSON array，每個含 store_name, store_type(minsu/restaurant/school/clinic/rental), district, opening_script, priority_score。不要說明文字。`;
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': anthropicKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const d = await r.json();
+  let text = d.content?.[0]?.text || '';
+  if (text.startsWith('```')) {
+    text = text.split('```')[1];
+    if (text.startsWith('json')) text = text.substring(4);
+  }
+  text = text.trim();
+  const candidates = JSON.parse(text);
+
+  // 3. Insert b2b_applications
+  let written = 0;
+  for (const c of candidates) {
+    const wr = await fetch(`${SUPABASE_URL}/rest/v1/b2b_applications`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: 'Bearer ' + SUPABASE_ANON,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        store_name: c.store_name,
+        store_type: c.store_type || 'other',
+        contact_name: '待夥伴聯絡確認',
+        contact_phone: '查 Google Maps',
+        city: '台中市',
+        district: c.district,
+        pipeline_stage: 'lead',
+        source: 'b2b_intel_officer',
+        source_detail: `PWA 對話派遣 ${new Date().toLocaleString('zh-TW')}`,
+        notes: `話術：${c.opening_script}｜評分：${c.priority_score}/10`
+      })
+    });
+    if (wr.status === 201 || wr.status === 200) written++;
+  }
+
+  // 4. Log
+  await fetch(`${SUPABASE_URL}/rest/v1/agent_logs`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON,
+      Authorization: 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal'
+    },
+    body: JSON.stringify({
+      agent_code: 'b2b_intel_officer',
+      run_id: `chat_${Date.now()}`,
+      started_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      status: 'success',
+      items_processed: written,
+      output: { candidates: candidates.map(c => c.store_name) },
+      notes: 'PWA 對話派遣'
+    })
+  }).catch(() => {});
+
+  return `✅ 寫入 ${written}/5 家\n\n` + candidates.map(c =>
+    `• ${c.store_name}（${c.district}·${c.priority_score}分）\n  話術：${c.opening_script}`
+  ).join('\n\n');
+}
+
+function clearChat() {
+  if (!confirm('清除對話歷史？')) return;
+  history = [];
+  localStorage.removeItem(HISTORY_KEY);
+  document.getElementById('messages').innerHTML = '';
+  appendMsg('system', '已清除。重新開始對話');
+  appendMsg('assistant', '夥伴你好，重新開始。要做什麼？');
+}
+</script>
+</body>
+</html>
