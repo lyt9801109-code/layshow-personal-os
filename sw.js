@@ -1,6 +1,6 @@
-// LAYSHOW Personal OS Service Worker v9 (2026-06-07)
-// v9: 軍師管家正名 + 今日 3 件事 + 一鍵問軍師管家
-const CACHE_VERSION = 'layshow-os-v9-' + new Date().toISOString().slice(0, 10);
+// LAYSHOW Personal OS Service Worker v10 (2026-06-07)
+// v10: 修「待跟進客戶」bug + 30 處副官→軍師管家全替換
+const CACHE_VERSION = 'layshow-os-v10-' + new Date().toISOString().slice(0, 10);
 
 self.addEventListener('install', e => {
   console.log('[SW] Installing', CACHE_VERSION);
