@@ -213,7 +213,26 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 
   <div class="page active" id="page-home">
 
-    <!-- ====== 副官晨報儀表板 ====== -->
+    <!-- ====== 🛡️ 軍師管家 - 今日 3 件事（最高優先）====== -->
+    <div id="todayTop3" style="background:linear-gradient(135deg,#0c2340 0%,#1a3a5c 50%,#F37021 200%);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 6px 20px rgba(243,112,33,0.25);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="font-size:11px;opacity:0.85;letter-spacing:2px;">🎖️ 軍師管家 · 今日 3 件事</div>
+          <div id="top3Greet" style="font-size:16px;font-weight:700;margin-top:2px;">早安老闆</div>
+        </div>
+        <div onclick="askStrategist()" style="background:rgba(255,255,255,0.18);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">
+          💬 問軍師管家
+        </div>
+      </div>
+      <div id="top3List" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:rgba(255,255,255,0.12);padding:12px;border-radius:10px;font-size:13px;">⏳ 載入中...</div>
+      </div>
+      <div style="font-size:10px;opacity:0.6;margin-top:8px;text-align:right;" id="familyTimeCountdown">
+        🏠 家人時間 19:00-20:30 軍師管家自動閉嘴
+      </div>
+    </div>
+
+    <!-- ====== 軍師管家戰情儀表板 ====== -->
     <div class="commander">
       <div class="cmd-greeting" id="cmdGreet">早安逸霆，準備好了嗎？</div>
       <div class="cmd-title">🎖️ LAYSHOW 戰情儀表板</div>
@@ -916,7 +935,7 @@ function showPage(name) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === name));
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (name === 'home') refreshCmdList();
+  if (name === 'home') { refreshCmdList(); refreshTop3(); }
   if (name === 'quote' && document.getElementById('quoteItems').children.length === 0) {
     addQuoteItem();
   }
@@ -2172,6 +2191,140 @@ async function confirmCreateOrder() {
 }
 
 // ========= 即時指令動態（多設備同步）=========
+// ========= 🛡️ 軍師管家 今日 3 件事 =========
+async function refreshTop3() {
+  const s = getS();
+  if (!s.supabaseKey) return;
+  try {
+    const sBase = `${s.supabaseUrl}/rest/v1`;
+    const sH = { 'apikey': s.supabaseKey, 'Authorization': `Bearer ${s.supabaseKey}` };
+
+    // 收集當前戰況
+    const today = new Date().toISOString().split('T')[0];
+    const [wo, b2b, hits, q] = await Promise.all([
+      fetch(`${sBase}/work_orders?created_at=gte.${today}&select=id,status,final_total_amount`, {headers: sH}).then(r=>r.ok?r.json():[]),
+      fetch(`${sBase}/b2b_applications?select=pipeline_stage,monthly_recurring_revenue,store_name,created_at&order=created_at.desc`, {headers: sH}).then(r=>r.ok?r.json():[]),
+      fetch(`${sBase}/crawler_hits?status=eq.pending&order=created_at.desc&limit=5`, {headers: sH}).then(r=>r.ok?r.json():[]),
+      fetch(`${sBase}/quick_quotes?status=eq.sent&select=id`, {headers: sH}).then(r=>r.ok?r.json():[]),
+    ]);
+
+    const mrr = (Array.isArray(b2b)?b2b:[]).filter(x=>['active','paid'].includes(x.pipeline_stage)).reduce((s,x)=>s+(+x.monthly_recurring_revenue||0),0);
+    const leads = (Array.isArray(b2b)?b2b:[]).filter(x=>x.pipeline_stage==='lead');
+    const todayRevenue = (Array.isArray(wo)?wo:[]).filter(x=>x.status==='completed').reduce((s,x)=>s+(+x.final_total_amount||0),0);
+
+    // 智能決定今日 3 件事
+    const todos = [];
+    const now = new Date();
+    const hour = now.getHours();
+    const greet = hour<6?'夜深了': hour<12?'早安':hour<14?'午安':hour<18?'下午':hour<22?'晚安':'夜深了';
+    document.getElementById('top3Greet').textContent = `${greet}老闆`;
+
+    // 規則：今天該做什麼
+    if (leads.length > 0) {
+      const target = leads[0];
+      todos.push({
+        emoji: '🎯',
+        title: `打電話給「${target.store_name}」`,
+        sub: `B2B 候選 · 還剩 ${leads.length} 家未聯絡`,
+        act: () => alert(`軍師管家建議：\n\n打給：${target.store_name}\n話術：「您好我是 LAYSHOW 雷修，台灣首創 7 日保固維修平台。我們有專門針對[類型]的月費維護方案，能耽誤您 3 分鐘嗎？」`)
+      });
+    }
+    if ((Array.isArray(hits)?hits:[]).length > 0) {
+      todos.push({
+        emoji: '💬',
+        title: `跟進 ${hits.length} 個 FB 客戶池`,
+        sub: `已留言但還沒私訊跟進`,
+        act: () => location.href = 'crawler_pool.html'
+      });
+    }
+    if (q && q.length > 0) {
+      todos.push({
+        emoji: '📋',
+        title: `${q.length} 個報價單待客戶回應`,
+        sub: `送出 > 3 天的該追了`,
+        act: () => showPage('quote')
+      });
+    }
+    if (todos.length < 3) {
+      todos.push({
+        emoji: '📸',
+        title: '路上看到 1 家店就拍店招',
+        sub: '副官 AI 自動加進 B2B pipeline',
+        act: () => showPage('photo_b2b')
+      });
+    }
+    if (todos.length < 3) {
+      todos.push({
+        emoji: '🎨',
+        title: '派軍師管家生 1 張 IG 廣告',
+        sub: '主題：B2B 7 日保固',
+        act: () => showPage('image_studio')
+      });
+    }
+
+    const html = todos.slice(0,3).map((t,i) => `
+      <div onclick='(${t.act.toString()})()' style="background:rgba(255,255,255,0.13);padding:12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:22px;width:30px;text-align:center;">${t.emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;color:#fff;">${i+1}. ${t.title}</div>
+          <div style="font-size:11px;opacity:0.85;margin-top:2px;">${t.sub}</div>
+        </div>
+        <div style="font-size:18px;opacity:0.6;">→</div>
+      </div>
+    `).join('');
+    document.getElementById('top3List').innerHTML = html;
+
+    // 家人時間倒數
+    const mins = (19 - now.getHours()) * 60 - now.getMinutes();
+    let ftxt = '';
+    if (hour >= 19 && (hour < 20 || (hour===20 && now.getMinutes()<30))) {
+      ftxt = '🏠 現在是家人時間，軍師管家閉嘴中';
+    } else if (mins > 0 && mins < 180) {
+      ftxt = `🏠 家人時間倒數 ${Math.floor(mins/60)}小時${mins%60}分鐘 → 軍師管家會自動安靜`;
+    } else {
+      ftxt = '🏠 家人時間 19:00-20:30 軍師管家自動閉嘴';
+    }
+    document.getElementById('familyTimeCountdown').textContent = ftxt;
+
+  } catch (e) { console.error(e); }
+}
+
+// 💬 一鍵問軍師管家
+async function askStrategist() {
+  const question = prompt('💬 跟軍師管家對話：\n\n例如：\n• 「今天該打哪 3 家」\n• 「明天 B2B 拜訪話術」\n• 「該不該降價」\n• 「對手 PRO360 在做什麼」');
+  if (!question) return;
+  const s = getS();
+  if (!s.anthropicKey) { toast('⚠️ 先設定 Anthropic Key'); showPage('settings'); return; }
+
+  toast('🛡️ 軍師管家思考中...');
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1500,
+        system: `你是 LAYSHOW 雷修的軍師管家（不是副官）。老闆林逸霆剛從低谷重新站起。
+你是「軍師（戰略）+ 管家（系統）」二合一。
+LAYSHOW 戰略：唯一 7 日保固維修平台，主戰場 B2B（30 家 pipeline）。
+語氣：簡潔有溫度，像並肩哥們但專業。
+家人時間 19:00-20:30 不打擾。
+回答用繁體中文。`,
+        messages: [{role: 'user', content: question}]
+      })
+    });
+    if (!r.ok) { toast('❌ Claude API 失敗'); return; }
+    const data = await r.json();
+    const answer = data.content[0].text;
+    alert(`🛡️ 軍師管家回覆：\n\n${answer}`);
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
 async function refreshCmdList() {
   const s = getS();
   if (!s.supabaseKey) return;
