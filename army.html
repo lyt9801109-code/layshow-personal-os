@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0c2340">
+<meta name="color-scheme" content="light only">
+<title>🎖️ LAYSHOW AI 軍團指揮中心</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #F37021; --dark: #0c2340; --bg: #f8fafc; --card: #ffffff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 60px; }
+.header {
+  background: linear-gradient(135deg, var(--dark), #1a4a8a);
+  color: white; padding: 24px 16px; border-radius: 20px;
+  margin: -16px -16px 20px; position: relative; overflow: hidden;
+}
+.header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; background: var(--primary); opacity: 0.2; }
+.header h1 { font-size: 22px; font-weight: 800; }
+.header .sub { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.stat { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 10px 8px; border-radius: 10px; text-align: center; }
+.stat .label { font-size: 10px; opacity: 0.8; }
+.stat .val { font-size: 20px; font-weight: 800; margin-top: 2px; }
+.tier-section { margin-top: 18px; }
+.tier-title {
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  margin-bottom: 8px; padding-left: 4px;
+}
+.officer-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+  transition: all 0.15s; cursor: pointer; color: var(--text);
+}
+.officer-card:active { transform: scale(0.98); }
+.officer-card .emoji { font-size: 28px; flex-shrink: 0; }
+.officer-card .info { flex: 1; }
+.officer-card .name { font-size: 15px; font-weight: 700; }
+.officer-card .meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.officer-card .status { font-size: 11px; padding: 3px 8px; border-radius: 8px; font-weight: 700; }
+.status.active { background: #d1fae5; color: #065f46; }
+.status.building { background: #fef3c7; color: #92400e; }
+.status.planned { background: #f3f4f6; color: #6b7280; }
+.status.paused { background: #e0e7ff; color: #3730a3; }
+
+.refresh-btn {
+  position: fixed; bottom: 80px; right: 16px;
+  background: var(--primary); color: white;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: none; font-size: 24px;
+  box-shadow: 0 4px 14px rgba(243,112,33,0.4);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); display: flex; padding: 8px 0; z-index: 100; max-width: 480px; margin: 0 auto; }
+.nav-item { flex: 1; text-align: center; padding: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
+.nav-item.active { color: var(--primary); }
+.empty { text-align: center; padding: 30px; color: var(--text-muted); }
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>🎖️ LAYSHOW AI 軍團</h1>
+    <div class="sub">夥伴：軍團 16 兵種陪你出征</div>
+    <div class="stats">
+      <div class="stat">
+        <div class="label">兵種總數</div>
+        <div class="val" id="totalCount">-</div>
+      </div>
+      <div class="stat">
+        <div class="label">Active</div>
+        <div class="val" id="activeCount">-</div>
+      </div>
+      <div class="stat">
+        <div class="label">24h 任務</div>
+        <div class="val" id="runs24h">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="armyList" class="loading">載入軍團中...</div>
+</div>
+
+<button class="refresh-btn" onclick="loadArmy()">🔄</button>
+
+<nav class="bottom-nav">
+  <div class="nav-item" onclick="location.href='index.html'">🏠 主頁</div>
+  <div class="nav-item active">🎖️ 軍團</div>
+  <div class="nav-item" onclick="location.href='crawler_pool.html'">📍 客戶池</div>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMjg2ODAsImV4cCI6MjAyOTYwNDY4MH0.Sh7tNILJaUSPzqLGN3-AXZ2hdkTLpKjF54hMmJ_b-Uk';
+
+const TIER_INFO = {
+  'Command':       { emoji: '🎖️', label: 'Tier 0 - Command 指揮級' },
+  'Action':        { emoji: '⚔️', label: 'Tier 1 - Action 前線兵種' },
+  'Creative':      { emoji: '🎨', label: 'Tier 2 - Creative 創意兵種' },
+  'Intelligence':  { emoji: '🧠', label: 'Tier 3 - Intelligence 情報兵種' },
+  'Business':      { emoji: '💼', label: 'Tier 4 - Business 業務兵種' },
+  'Sales':         { emoji: '🎯', label: 'Tier 5 - Sales 銷售兵種' },
+};
+
+const OFFICER_EMOJI = {
+  'strategist_butler':       '🛡️',
+  'b2b_intel_officer':       '💼',
+  'quote_officer':           '💰',
+  'crawler_officer':         '🕷️',
+  'customer_service_officer':'📱',
+  'image_officer':           '🎨',
+  'video_officer':           '🎬',
+  'seo_content_officer':     '📝',
+  'narration_officer':       '🗣️',
+  'monitor_officer':         '📊',
+  'competitor_intel_officer':'🔍',
+  'customer_pool_officer':   '📞',
+  'finance_officer':         '🏦',
+  'work_order_officer':      '📋',
+  'referral_officer':        '🎯',
+  'side_business_officer':   '🛒',
+};
+
+async function loadArmy() {
+  document.getElementById('armyList').innerHTML = '<div class="loading">🔄 載入中...</div>';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/v_agent_stats`, {
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: 'Bearer ' + SUPABASE_ANON,
+      }
+    });
+    const data = await r.json();
+    renderArmy(data);
+  } catch (e) {
+    document.getElementById('armyList').innerHTML = `<div class="empty">❌ 載入失敗：${e.message}</div>`;
+  }
+}
+
+function renderArmy(officers) {
+  if (!Array.isArray(officers) || officers.length === 0) {
+    document.getElementById('armyList').innerHTML = '<div class="empty">😢 沒有軍團資料</div>';
+    return;
+  }
+
+  // Update stats
+  document.getElementById('totalCount').textContent = officers.length;
+  document.getElementById('activeCount').textContent = officers.filter(o => o.status === 'active').length;
+  const runs24h = officers.reduce((s, o) => s + (o.runs_24h || 0), 0);
+  document.getElementById('runs24h').textContent = runs24h;
+
+  // Group by tier
+  const grouped = {};
+  officers.forEach(o => {
+    (grouped[o.tier] = grouped[o.tier] || []).push(o);
+  });
+
+  // Render tiers in order
+  const tierOrder = ['Command', 'Action', 'Creative', 'Intelligence', 'Business', 'Sales'];
+  let html = '';
+  for (const tier of tierOrder) {
+    if (!grouped[tier]) continue;
+    const info = TIER_INFO[tier] || { emoji: '⭐', label: tier };
+    html += `<div class="tier-section">`;
+    html += `<div class="tier-title">${info.emoji} ${info.label}（${grouped[tier].length}）</div>`;
+    for (const o of grouped[tier]) {
+      const emoji = OFFICER_EMOJI[o.code] || '⚙️';
+      const statusZh = {active:'運作中', building:'建構中', planned:'計畫中', paused:'暫停'}[o.status] || o.status;
+      const lastSeen = o.last_active_at ? new Date(o.last_active_at).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '尚未啟動';
+      html += `
+        <div class="officer-card" onclick="showOfficer('${o.code}')">
+          <div class="emoji">${emoji}</div>
+          <div class="info">
+            <div class="name">${o.name_zh}</div>
+            <div class="meta">${o.deployment} · 上次活動 ${lastSeen}</div>
+          </div>
+          <span class="status ${o.status}">${statusZh}</span>
+        </div>
+      `;
+    }
+    html += `</div>`;
+  }
+
+  document.getElementById('armyList').innerHTML = html;
+}
+
+function showOfficer(code) {
+  // TODO: officer detail view
+  alert(`兵種詳情：${code}\n（v2 開發中）`);
+}
+
+loadArmy();
+setInterval(loadArmy, 60000); // refresh every 60s
+</script>
+</body>
+</html>
