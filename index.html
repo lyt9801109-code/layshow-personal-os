@@ -372,6 +372,16 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <span class="arr" id="competitorDispatchArr">⚡</span>
     </div>
 
+    <!-- 6. 法律顧問 (NEW) -->
+    <div class="commander-chat" style="background: linear-gradient(135deg, #1e40af, #1e3a8a);" onclick="dispatchOfficer('legal')">
+      <span class="av">⚖️</span>
+      <div class="txt">
+        <div class="ti" id="legalDispatchTitle">派法律顧問</div>
+        <div class="sb" id="legalDispatchSub">消保/個資/合約/勞基/車禍責任分析</div>
+      </div>
+      <span class="arr" id="legalDispatchArr">⚡</span>
+    </div>
+
     <!-- ====== 急迫待辦（自動顯示） ====== -->
     <div id="urgentArea"></div>
 
@@ -1864,6 +1874,20 @@ async function dispatchOfficer(officerKey) {
 3. 反制策略 2 個建議
 
 語氣：戰情分析，客觀不誇大。`,
+      preFetch: async () => ({}),
+    },
+    legal: {
+      title: 'legalDispatchTitle', sub: 'legalDispatchSub', arr: 'legalDispatchArr',
+      defaultTitle: '派法律顧問', defaultSub: '消保/個資/合約/勞基/車禍責任分析',
+      agentCode: 'legal_advisor',
+      systemPrompt: '你是 LAYSHOW 雷修平台的資深法律顧問，台灣執業。專長：消保法、個資法、用戶服務條款、勞基法、車禍責任、商標智財。語氣：專業、冷靜、給可行的作法。每次回答必含 3 個部份：法律規定（哪條法）、風險分析（後果）、建議行動（明天怎麼做）。繁體中文。',
+      buildPrompt: () => `做 1 次 LAYSHOW 月度法律巡檢。
+列出本月需要關心的 3 個法律重點 + 該怎麼做：
+1. 用戶/師傅 出勤車禍責任如何切割
+2. 客戶資料保護（個資法）目前漏洞
+3. 服務條款最新該補的條文
+
+每個重點寫：法律規定、風險、行動。300 字內。`,
       preFetch: async () => ({}),
     },
   };
