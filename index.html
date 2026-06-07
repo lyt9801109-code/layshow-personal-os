@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0c2340">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LAYSHOW OS">
@@ -1678,10 +1680,10 @@ async function askClaude() {
     if (d.content && d.content[0]) {
       const answer = d.content[0].text;
       document.getElementById('askResult').innerHTML = `
-        <div style="background:#f0f9ff;border:2px solid #3b82f6;border-radius:12px;padding:14px;margin-top:14px;">
-          <div style="font-size:11px;color:#888;margin-bottom:6px;">🧠 Claude 答覆</div>
-          <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;">${answer}</div>
-          <button class="btn secondary" style="margin-top:10px;font-size:12px;padding:8px;" onclick="copyText(\`${answer.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">📋 複製答案</button>
+        <div style="background:#f0f9ff;border:2px solid #3b82f6;border-radius:12px;padding:14px;margin-top:14px;color:#1e293b;">
+          <div style="font-size:11px;color:#64748b;margin-bottom:6px;font-weight:600;">🧠 軍師管家回覆</div>
+          <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;color:#0c2340;">${answer}</div>
+          <button class="btn secondary" style="margin-top:10px;font-size:12px;padding:8px;color:#1e293b;" onclick="copyText(\`${answer.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">📋 複製答案</button>
         </div>`;
       // 也記錄到 Supabase + 推 Telegram
       await sendCommand('ai_ask', { question: q, answer: answer.substring(0, 500) }, `🧠 Q: ${q.substring(0, 50)}\n\nA: ${answer.substring(0, 800)}`);
