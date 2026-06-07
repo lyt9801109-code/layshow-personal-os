@@ -309,14 +309,57 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <span class="arr">→</span>
     </div>
 
-    <!-- ====== 派 B2B 戰情官（NEW，按一下找 5 家） ====== -->
+    <!-- ====== 軍團一鍵派遣中心（5 個兵種） ====== -->
+    <div class="section-title" style="margin-top:14px;">⚔️ 軍團一鍵派遣</div>
+
+    <!-- 1. B2B 戰情官 -->
     <div class="commander-chat" style="background: linear-gradient(135deg, #0891b2, #0e7490);" onclick="dispatchB2BOfficer()">
       <span class="av">💼</span>
       <div class="txt">
-        <div class="ti" id="b2bDispatchTitle">派 B2B 戰情官出擊</div>
-        <div class="sb" id="b2bDispatchSub">30 秒找 5 家台中 B2B 候選 + 客製話術</div>
+        <div class="ti" id="b2bDispatchTitle">派 B2B 戰情官</div>
+        <div class="sb" id="b2bDispatchSub">30 秒找 5 家台中候選 + 話術</div>
       </div>
       <span class="arr" id="b2bDispatchArr">⚡</span>
+    </div>
+
+    <!-- 2. 財務官 -->
+    <div class="commander-chat" style="background: linear-gradient(135deg, #059669, #047857);" onclick="dispatchOfficer('finance')">
+      <span class="av">🏦</span>
+      <div class="txt">
+        <div class="ti" id="financeDispatchTitle">派財務官</div>
+        <div class="sb" id="financeDispatchSub">算今日 MRR + 本月累計 + 距目標</div>
+      </div>
+      <span class="arr" id="financeDispatchArr">⚡</span>
+    </div>
+
+    <!-- 3. 監視官 -->
+    <div class="commander-chat" style="background: linear-gradient(135deg, #dc2626, #991b1b);" onclick="dispatchOfficer('monitor')">
+      <span class="av">📊</span>
+      <div class="txt">
+        <div class="ti" id="monitorDispatchTitle">派監視官</div>
+        <div class="sb" id="monitorDispatchSub">系統健康檢查 + 異常警報</div>
+      </div>
+      <span class="arr" id="monitorDispatchArr">⚡</span>
+    </div>
+
+    <!-- 4. SEO 內容官 -->
+    <div class="commander-chat" style="background: linear-gradient(135deg, #ea580c, #c2410c);" onclick="dispatchOfficer('seo')">
+      <span class="av">📝</span>
+      <div class="txt">
+        <div class="ti" id="seoDispatchTitle">派 SEO 內容官</div>
+        <div class="sb" id="seoDispatchSub">寫 1 篇台中家修主題文章</div>
+      </div>
+      <span class="arr" id="seoDispatchArr">⚡</span>
+    </div>
+
+    <!-- 5. 競品官 -->
+    <div class="commander-chat" style="background: linear-gradient(135deg, #7c3aed, #5b21b6);" onclick="dispatchOfficer('competitor')">
+      <span class="av">🔍</span>
+      <div class="txt">
+        <div class="ti" id="competitorDispatchTitle">派競品官</div>
+        <div class="sb" id="competitorDispatchSub">分析台中家修對手最新動態</div>
+      </div>
+      <span class="arr" id="competitorDispatchArr">⚡</span>
     </div>
 
     <!-- ====== 急迫待辦（自動顯示） ====== -->
@@ -1671,7 +1714,224 @@ function setAskExample(i) {
   document.getElementById('askText').value = ASK_EXAMPLES[i];
 }
 // 軍團共用 Supabase 端點
+const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMjg2ODAsImV4cCI6MjAyOTYwNDY4MH0.Sh7tNILJaUSPzqLGN3-AXZ2hdkTLpKjF54hMmJ_b-Uk';
+
+// 軍團兵種派遣（4 個非 B2B 兵種共用）
+async function dispatchOfficer(officerKey) {
+  const s = getS();
+  if (!s.anthropicKey) { toast('⚠️ 請先到「設定」貼 Anthropic API Key'); showPage('settings'); return; }
+
+  const config = {
+    finance: {
+      title: 'financeDispatchTitle', sub: 'financeDispatchSub', arr: 'financeDispatchArr',
+      defaultTitle: '派財務官', defaultSub: '算今日 MRR + 本月累計 + 距目標',
+      agentCode: 'finance_officer',
+      systemPrompt: '你是 LAYSHOW 雷修財務官。報告當下財務狀況。語氣簡潔、數據化、不打雞血。繁體中文。',
+      buildPrompt: (data) => `LAYSHOW 當前財務數據：
+- 今日工單：${data.todayOrders} 筆
+- 今日營收：NT$ ${data.todayRevenue}
+- 本月累計營收：NT$ ${data.monthRevenue}
+- 30天 MRR 估算：NT$ ${data.mrr}
+- 本月 B2B Lead：${data.b2bLeads}
+- 本月 B2B 成交：${data.b2bSigned}
+- MRR 目標：NT$ 30,000（90 天）
+
+請寫一份財務日報（200 字內）：
+1. 今日營收狀況
+2. 月度進度
+3. 距離目標 NT$ 30,000 還差多少
+4. 給夥伴 1 個明天該做的建議行動`,
+      preFetch: async () => {
+        const today = new Date().toISOString().substring(0,10);
+        const monthStart = today.substring(0,7) + '-01';
+        const day30 = new Date(Date.now() - 30*86400000).toISOString().substring(0,10);
+
+        // 今日工單
+        const todayR = await fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=final_total_amount&completed_at=gte.${today}&status=neq.closed`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        });
+        const todayOrders = await todayR.json();
+        const todayRevenue = todayOrders.reduce((s,o) => s + (Number(o.final_total_amount) || 0), 0);
+
+        // 本月工單
+        const monthR = await fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=final_total_amount&completed_at=gte.${monthStart}&status=neq.closed`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        });
+        const monthOrders = await monthR.json();
+        const monthRevenue = monthOrders.reduce((s,o) => s + (Number(o.final_total_amount) || 0), 0);
+
+        // 30 天工單
+        const r30 = await fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=final_total_amount&completed_at=gte.${day30}&status=neq.closed`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        });
+        const o30 = await r30.json();
+        const mrr = Math.round(o30.reduce((s,o) => s + (Number(o.final_total_amount) || 0), 0));
+
+        // B2B
+        const b2bR = await fetch(`${SUPABASE_URL}/rest/v1/b2b_applications?select=pipeline_stage&created_at=gte.${monthStart}`, {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON }
+        });
+        const b2b = await b2bR.json();
+
+        return {
+          todayOrders: todayOrders.length,
+          todayRevenue,
+          monthRevenue,
+          mrr,
+          b2bLeads: b2b.filter(x => x.pipeline_stage === 'lead').length,
+          b2bSigned: b2b.filter(x => x.pipeline_stage === 'signed').length,
+        };
+      },
+    },
+    monitor: {
+      title: 'monitorDispatchTitle', sub: 'monitorDispatchSub', arr: 'monitorDispatchArr',
+      defaultTitle: '派監視官', defaultSub: '系統健康檢查 + 異常警報',
+      agentCode: 'monitor_officer',
+      systemPrompt: '你是 LAYSHOW 系統監視官。檢查系統健康狀況，只報告異常和重點。繁體中文。',
+      buildPrompt: (data) => `LAYSHOW 系統檢查數據：
+- 進行中工單：${data.activeOrders} 筆
+- 超期未付款工單：${data.overduePaying} 筆
+- 24h 內失敗的兵種任務：${data.failedAgents} 次
+- 客戶池待處理：${data.crawlerHits} 筆
+- 待回覆爬蟲：${data.unrepliedReplies} 筆
+
+請寫系統健康報告（150 字內）：
+1. 整體健康度評分（1-10）
+2. 異常重點（如有）
+3. 推薦行動`,
+      preFetch: async () => {
+        const day1 = new Date(Date.now() - 86400000).toISOString();
+        const [active, overdue, failed, crawler] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=id&status=eq.active`, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }).then(r=>r.json()),
+          fetch(`${SUPABASE_URL}/rest/v1/work_orders?select=id&payout_status=eq.pending&created_at=lt.${day1}`, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }).then(r=>r.json()),
+          fetch(`${SUPABASE_URL}/rest/v1/agent_logs?select=id&status=eq.failed&started_at=gte.${day1}`, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }).then(r=>r.json()),
+          fetch(`${SUPABASE_URL}/rest/v1/crawler_hits?select=id&status=eq.queued&limit=200`, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }).then(r=>r.json()).catch(()=>[]),
+        ]);
+        return {
+          activeOrders: active.length || 0,
+          overduePaying: overdue.length || 0,
+          failedAgents: failed.length || 0,
+          crawlerHits: crawler.length || 0,
+          unrepliedReplies: 0,
+        };
+      },
+    },
+    seo: {
+      title: 'seoDispatchTitle', sub: 'seoDispatchSub', arr: 'seoDispatchArr',
+      defaultTitle: '派 SEO 內容官', defaultSub: '寫 1 篇台中家修主題文章',
+      agentCode: 'seo_content_officer',
+      systemPrompt: '你是 LAYSHOW SEO 內容官，寫繁體中文台中家修部落格文章。',
+      buildPrompt: () => `寫 1 篇 SEO 文章（標題 + 5 個 H2 + 300 字摘要）。
+從以下主題隨機選 1 個：
+- 水管堵塞、水管漏水、熱水器跳掉
+- 全屋配電、漏電、斷路器跳
+- 壁癌、油漆翻新
+
+格式：
+# 標題（含「台中」+ 主關鍵字）
+## H2-1
+## H2-2
+## H2-3
+## H2-4
+## H2-5
+（最後 100 字 CTA：layshow.com.tw 7 日保固 20 分鐘到達）`,
+      preFetch: async () => ({}),
+    },
+    competitor: {
+      title: 'competitorDispatchTitle', sub: 'competitorDispatchSub', arr: 'competitorDispatchArr',
+      defaultTitle: '派競品官', defaultSub: '分析台中家修對手最新動態',
+      agentCode: 'competitor_intel_officer',
+      systemPrompt: '你是 LAYSHOW 競品官，分析台中家修平台對手動態。繁體中文。',
+      buildPrompt: () => `根據你對台灣家修平台市場的知識，分析：
+- PRO360（最大對手）
+- 居家通、特力屋裝修
+- 台中本地：579、修繕網
+
+寫 1 份月度競品報告（300 字內）：
+1. 對手最新動態 3 點
+2. 對 LAYSHOW 威脅評估
+3. 反制策略 2 個建議
+
+語氣：戰情分析，客觀不誇大。`,
+      preFetch: async () => ({}),
+    },
+  };
+
+  const cfg = config[officerKey];
+  if (!cfg) return toast('未知兵種');
+
+  const titleEl = document.getElementById(cfg.title);
+  const subEl = document.getElementById(cfg.sub);
+  const arrEl = document.getElementById(cfg.arr);
+  titleEl.textContent = '出擊中...';
+  subEl.textContent = '分析資料 + 呼叫 Claude...';
+  arrEl.textContent = '⏳';
+
+  try {
+    const data = await cfg.preFetch();
+    const prompt = cfg.buildPrompt(data);
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': s.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1500,
+        system: cfg.systemPrompt,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    const d = await r.json();
+    const answer = d.content?.[0]?.text || '(空回應)';
+
+    // 寫 agent_logs
+    await fetch(`${SUPABASE_URL}/rest/v1/agent_logs`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: 'Bearer ' + SUPABASE_ANON,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        agent_code: cfg.agentCode,
+        run_id: `pwa_dispatch_${Date.now()}`,
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        status: 'success',
+        items_processed: 1,
+        notes: 'PWA 夥伴一鍵派遣',
+        output: { answer_preview: answer.substring(0, 200) }
+      })
+    });
+
+    titleEl.textContent = '✅ 完成';
+    subEl.textContent = answer.substring(0, 80);
+    arrEl.textContent = '🎯';
+
+    // 推 Telegram
+    await sendCommand(officerKey + '_dispatched', { source: 'pwa' },
+      `🎖️ ${cfg.defaultTitle.replace('派 ','').replace('派','')}回報\n\n${answer.substring(0, 2500)}`);
+
+  } catch (e) {
+    titleEl.textContent = '❌ 失敗';
+    subEl.textContent = e.message.substring(0, 60);
+    arrEl.textContent = '⚠️';
+    toast('❌ ' + e.message);
+  }
+
+  setTimeout(() => {
+    titleEl.textContent = cfg.defaultTitle;
+    subEl.textContent = cfg.defaultSub;
+    arrEl.textContent = '⚡';
+  }, 45000);
+}
 
 // 派 B2B 戰情官出擊（PWA 一鍵呼叫）
 async function dispatchB2BOfficer() {
