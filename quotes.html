@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0c2340">
+<meta name="color-scheme" content="light only">
+<title>📋 報價單管理 - LAYSHOW</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #f97316; --dark: #0f172a; --bg: #f8fafc; --card: #ffffff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+}
+body {
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+}
+.app { max-width: 520px; margin: 0 auto; padding: 12px; padding-bottom: 80px; }
+.header {
+  background: linear-gradient(135deg, var(--dark), #1e293b);
+  color: white; padding: 18px 14px; border-radius: 16px;
+  margin: -12px -12px 14px;
+}
+.header h1 { font-size: 20px; font-weight: 800; }
+.header .sub { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+.tools {
+  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.tools select, .tools input {
+  flex: 1; min-width: 120px;
+  padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
+  font-size: 14px; background: white; color: var(--text);
+}
+
+.stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 12px; }
+.stat-card {
+  background: white; border: 1px solid var(--border);
+  padding: 9px 6px; border-radius: 10px; text-align: center;
+}
+.stat-card .lbl { font-size: 10px; color: var(--text-muted); }
+.stat-card .val { font-size: 18px; font-weight: 800; color: var(--primary); margin-top: 2px; }
+
+.list { display: flex; flex-direction: column; gap: 8px; }
+.quote {
+  background: white; border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px; cursor: pointer; transition: transform 0.1s;
+}
+.quote:active { transform: scale(0.98); }
+.quote .top {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.quote .qno { font-size: 12px; color: var(--text-muted); font-family: monospace; }
+.quote .amt { font-size: 17px; font-weight: 800; color: var(--primary); }
+.quote .cust { font-size: 15px; font-weight: 700; margin-top: 5px; }
+.quote .svc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.quote .tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 6px;
+  background: #ffedd5; color: #9a3412; font-weight: 700;
+}
+.tag.region { background: #dbeafe; color: #1e40af; }
+.tag.district { background: #d1fae5; color: #065f46; }
+.tag.notags { background: #f3f4f6; color: #6b7280; }
+.tag.status-sent { background: #d1fae5; color: #065f46; }
+.tag.status-draft { background: #fef3c7; color: #92400e; }
+
+.actions { display: flex; gap: 6px; margin-top: 10px; }
+.btn {
+  flex: 1; padding: 8px; border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.btn-edit { background: var(--primary); color: white; }
+.btn-pdf { background: var(--dark); color: white; }
+.btn-regen { background: #fbbf24; color: #78350f; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+
+/* Edit modal */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: white; width: 100%; max-width: 520px; max-height: 88vh;
+  border-radius: 18px 18px 0 0; padding: 16px; overflow-y: auto;
+  animation: slideUp 0.2s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal h2 { font-size: 17px; margin-bottom: 10px; }
+.modal .field { margin-bottom: 10px; }
+.modal label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.modal input, .modal textarea, .modal select {
+  width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; color: var(--text); background: white;
+}
+.modal textarea { min-height: 60px; resize: vertical; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-actions .btn { padding: 11px; font-size: 14px; }
+.btn-cancel { background: #f3f4f6; color: var(--text); }
+.btn-save { background: var(--primary); color: white; }
+
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; background: white;
+  border-top: 1px solid var(--border); display: flex; padding: 6px 0; z-index: 50;
+  max-width: 520px; margin: 0 auto;
+}
+.nav-item {
+  flex: 1; text-align: center; padding: 5px; font-size: 11px;
+  color: var(--text-muted); cursor: pointer; text-decoration: none;
+}
+.nav-item.active { color: var(--primary); }
+.toast {
+  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+  background: rgba(15,23,42,0.92); color: white; padding: 10px 20px;
+  border-radius: 22px; font-size: 13px; z-index: 200;
+  opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>📋 報價單管理</h1>
+    <div class="sub">編輯 · 區域分類 · 重新產 PDF</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="lbl">總筆數</div><div class="val" id="statTotal">-</div></div>
+    <div class="stat-card"><div class="lbl">總金額</div><div class="val" id="statAmount">-</div></div>
+    <div class="stat-card"><div class="lbl">區域數</div><div class="val" id="statRegion">-</div></div>
+  </div>
+
+  <div class="tools">
+    <select id="filterRegion">
+      <option value="">全部區域</option>
+    </select>
+    <select id="filterStatus">
+      <option value="">全部狀態</option>
+      <option value="sent">已寄出</option>
+      <option value="draft">草稿</option>
+      <option value="paid">已收款</option>
+    </select>
+    <input id="filterSearch" placeholder="搜尋客戶/編號...">
+  </div>
+
+  <div id="listBox" class="list"><div class="empty">載入中...</div></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">✏️ 編輯報價單</h2>
+    <div class="field">
+      <label>報價單編號</label>
+      <input id="ed_qno" readonly style="background:#f3f4f6;color:#6b7280;">
+    </div>
+    <div class="field">
+      <label>客戶名稱</label>
+      <input id="ed_name" placeholder="例：台中豐原張先生">
+    </div>
+    <div class="field">
+      <label>客戶電話</label>
+      <input id="ed_phone" placeholder="0912-345-678">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="field">
+        <label>區域（縣市）</label>
+        <select id="ed_region">
+          <option value="">未分類</option>
+          <option>台北</option><option>新北</option><option>桃園</option>
+          <option>新竹</option><option>苗栗</option><option>台中</option>
+          <option>彰化</option><option>南投</option><option>雲林</option>
+          <option>嘉義</option><option>台南</option><option>高雄</option>
+          <option>屏東</option><option>宜蘭</option><option>花蓮</option>
+          <option>台東</option><option>基隆</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>區/鎮</label>
+        <input id="ed_district" placeholder="豐原區">
+      </div>
+    </div>
+    <div class="field">
+      <label>服務項目</label>
+      <textarea id="ed_service" placeholder="水電工程"></textarea>
+    </div>
+    <div class="field">
+      <label>金額（NT$）</label>
+      <input id="ed_amount" type="number" placeholder="3000">
+    </div>
+    <div class="field">
+      <label>狀態</label>
+      <select id="ed_status">
+        <option value="draft">草稿</option>
+        <option value="sent">已寄出</option>
+        <option value="paid">已收款</option>
+        <option value="cancelled">已取消</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>備註</label>
+      <textarea id="ed_notes" placeholder="客戶補充說明..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn btn-save" onclick="saveEdit()">💾 儲存</button>
+      <button class="btn btn-regen" onclick="regenPDF()">🔄 重產 PDF</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html">🏠 主頁</a>
+  <a class="nav-item" href="chat.html">💬 對話</a>
+  <a class="nav-item active">📋 報價單</a>
+  <a class="nav-item" href="priority_hits.html">🚨 PRIORITY</a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwOTk0ODAsImV4cCI6MjA5MjY3NTQ4MH0.8zWp-rDr8RXhSETxW1cGE4G68KqNZ-UfH74lbILBVxg';
+const H = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON };
+
+let allQuotes = [];
+let editingId = null;
+
+function toast(msg, ms = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+async function loadQuotes() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/quick_quotes?order=created_at.desc&limit=200', { headers: H });
+    allQuotes = await r.json();
+    renderStats();
+    renderRegionFilter();
+    renderList();
+  } catch (e) {
+    document.getElementById('listBox').innerHTML = '<div class="empty">❌ 載入失敗：' + e.message + '</div>';
+  }
+}
+
+function renderStats() {
+  const total = allQuotes.length;
+  const amount = allQuotes.reduce((sum, q) => sum + (parseFloat(q.amount) || 0), 0);
+  const regions = new Set(allQuotes.map(q => q.region).filter(r => r));
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAmount').textContent = 'NT$' + Math.round(amount/1000) + 'k';
+  document.getElementById('statRegion').textContent = regions.size;
+}
+
+function renderRegionFilter() {
+  const sel = document.getElementById('filterRegion');
+  const regions = [...new Set(allQuotes.map(q => q.region).filter(r => r))].sort();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部區域 (' + allQuotes.length + ')</option>';
+  for (const r of regions) {
+    const n = allQuotes.filter(q => q.region === r).length;
+    sel.innerHTML += `<option value="${r}">${r} (${n})</option>`;
+  }
+  sel.value = cur;
+}
+
+function renderList() {
+  const fRegion = document.getElementById('filterRegion').value;
+  const fStatus = document.getElementById('filterStatus').value;
+  const fSearch = (document.getElementById('filterSearch').value || '').toLowerCase();
+
+  let list = allQuotes;
+  if (fRegion) list = list.filter(q => q.region === fRegion);
+  if (fStatus) list = list.filter(q => q.status === fStatus);
+  if (fSearch) list = list.filter(q =>
+    (q.customer_name || '').toLowerCase().includes(fSearch) ||
+    (q.quote_number || '').toLowerCase().includes(fSearch) ||
+    (q.service_category || '').toLowerCase().includes(fSearch)
+  );
+
+  const box = document.getElementById('listBox');
+  if (list.length === 0) {
+    box.innerHTML = '<div class="empty">😶 沒有符合條件的報價單</div>';
+    return;
+  }
+
+  box.innerHTML = list.map(q => {
+    const amt = parseFloat(q.amount || 0);
+    const regionTag = q.region ? `<span class="tag region">📍${q.region}</span>` : '';
+    const districtTag = q.district ? `<span class="tag district">${q.district}</span>` : '';
+    const noRegionTag = (!q.region && !q.district) ? '<span class="tag notags">未分區</span>' : '';
+    const statusTag = q.status ? `<span class="tag status-${q.status}">${q.status}</span>` : '';
+    const ver = q.version > 1 ? ` <span class="tag" style="background:#fef3c7;color:#92400e;">v${q.version}</span>` : '';
+    return `
+      <div class="quote">
+        <div class="top">
+          <div class="qno">${q.quote_number || '—'}${ver}</div>
+          <div class="amt">NT$ ${amt.toLocaleString()}</div>
+        </div>
+        <div class="cust">${q.customer_name || '(未命名)'}</div>
+        <div class="svc">${q.service_category || '—'}</div>
+        <div class="tags">${regionTag}${districtTag}${noRegionTag}${statusTag}</div>
+        <div class="actions">
+          <button class="btn btn-edit" onclick="openEdit(${q.id})">✏️ 編輯</button>
+          <button class="btn btn-regen" onclick="regenById(${q.id})">🔄 重產 PDF</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openEdit(id) {
+  const q = allQuotes.find(x => x.id === id);
+  if (!q) return;
+  editingId = id;
+  document.getElementById('ed_qno').value = q.quote_number || '';
+  document.getElementById('ed_name').value = q.customer_name || '';
+  document.getElementById('ed_phone').value = q.customer_phone || '';
+  document.getElementById('ed_region').value = q.region || '';
+  document.getElementById('ed_district').value = q.district || '';
+  document.getElementById('ed_service').value = q.service_category || '';
+  document.getElementById('ed_amount').value = q.amount || '';
+  document.getElementById('ed_status').value = q.status || 'draft';
+  document.getElementById('ed_notes').value = q.notes || '';
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  editingId = null;
+}
+
+async function saveEdit() {
+  if (!editingId) return;
+  const payload = {
+    customer_name: document.getElementById('ed_name').value.trim(),
+    customer_phone: document.getElementById('ed_phone').value.trim(),
+    region: document.getElementById('ed_region').value || null,
+    district: document.getElementById('ed_district').value.trim() || null,
+    service_category: document.getElementById('ed_service').value.trim(),
+    amount: parseFloat(document.getElementById('ed_amount').value) || 0,
+    status: document.getElementById('ed_status').value,
+    notes: document.getElementById('ed_notes').value.trim() || null,
+  };
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/quick_quotes?id=eq.' + editingId, {
+      method: 'PATCH',
+      headers: { ...H, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      toast('✅ 已儲存（version 自動 +1）');
+      closeModal();
+      await loadQuotes();
+    } else {
+      toast('❌ 儲存失敗');
+    }
+  } catch (e) {
+    toast('❌ 網路錯誤');
+  }
+}
+
+async function regenById(id) {
+  editingId = id;
+  await regenPDF();
+}
+
+async function regenPDF() {
+  if (!editingId) return;
+  const q = allQuotes.find(x => x.id === editingId);
+  if (!q) return;
+  if (!confirm('確定要重新產這張報價單的 PDF 並推 Telegram 嗎？')) return;
+  try {
+    const payload = {
+      command_type: 'quote_regen',
+      payload: { quote_id: editingId, quote_number: q.quote_number },
+      preview: '🔄 重新產：' + (q.quote_number || '') + ' / ' + (q.customer_name || ''),
+      status: 'pending',
+      source: 'pwa_quotes_html'
+    };
+    const r = await fetch(SUPABASE_URL + '/rest/v1/command_logs', {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      toast('✅ 指令已派發，桌機 worker 重產中（30 秒內推 Telegram）');
+      closeModal();
+    } else {
+      toast('❌ 派發失敗：' + r.status);
+    }
+  } catch (e) {
+    toast('❌ 網路錯誤');
+  }
+}
+
+document.getElementById('filterRegion').addEventListener('change', renderList);
+document.getElementById('filterStatus').addEventListener('change', renderList);
+document.getElementById('filterSearch').addEventListener('input', renderList);
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+loadQuotes();
+setInterval(loadQuotes, 60000); // 1 分鐘自動刷新
+</script>
+</body>
+</html>
