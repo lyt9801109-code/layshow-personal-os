@@ -119,6 +119,12 @@ body {
   opacity: 0; transition: opacity 0.2s; pointer-events: none;
 }
 .toast.show { opacity: 1; }
+
+/* embed=1: 隱藏自己的 header / bottom-nav，給 PWA shell 接手 */
+body.embed .header { display: none; }
+body.embed .bottom-nav { display: none; }
+body.embed .app { padding-bottom: 12px; }
+body.embed .app { padding-top: 4px; }
 </style>
 </head>
 <body>
@@ -185,11 +191,23 @@ body {
       </div>
     </div>
     <div class="field">
-      <label>服務項目</label>
+      <label>服務項目（總分類）</label>
       <textarea id="ed_service" placeholder="水電工程"></textarea>
     </div>
     <div class="field">
-      <label>金額（NT$）</label>
+      <label style="display:flex;justify-content:space-between;align-items:center;">
+        <span>項目明細</span>
+        <button type="button" onclick="edAddItem()" style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700;">➕ 加一項</button>
+      </label>
+      <div id="ed_items_box" style="display:flex;flex-direction:column;gap:4px;"></div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;font-size:11px;color:var(--text-muted);margin-top:8px;padding:8px;background:#f8fafc;border-radius:6px;">
+        <span>小計：<strong id="ed_subtotal" style="color:var(--text);">0</strong></span>
+        <span>稅 5%：<strong id="ed_tax" style="color:var(--text);">0</strong></span>
+        <span style="font-size:13px;">合計：<strong id="ed_total" style="color:var(--primary);">0</strong></span>
+      </div>
+    </div>
+    <div class="field">
+      <label>金額（NT$）<span style="font-size:10px;color:var(--text-muted);">— 有項目時自動計算，沒項目時手動填</span></label>
       <input id="ed_amount" type="number" placeholder="3000">
     </div>
     <div class="field">
@@ -223,9 +241,31 @@ body {
 <div class="toast" id="toast"></div>
 
 <script>
+// Embed mode: 被 PWA index.html 內嵌時隱藏自己的 header / nav
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed');
+}
+
 const SUPABASE_URL = 'https://ujaogedhwcbyczzpgzpy.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwOTk0ODAsImV4cCI6MjA5MjY3NTQ4MH0.8zWp-rDr8RXhSETxW1cGE4G68KqNZ-UfH74lbILBVxg';
 const H = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON };
+
+// Telegram bot 通知（桌機 command_worker 靠 Telegram getUpdates 喚醒，光 INSERT Supabase 不夠）
+const TG_TOKEN = '8585783388:AAFldD2N1ASet7AzpJ-FJbl1Psj8hdMIcOQ';
+const TG_CHAT = '@layshow888';
+
+async function notifyTelegram(text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT, text }),
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 let allQuotes = [];
 let editingId = null;
@@ -314,6 +354,58 @@ function renderList() {
   }).join('');
 }
 
+// ===== 項目明細編輯 helpers =====
+function edAddItem(preset) {
+  const box = document.getElementById('ed_items_box');
+  const row = document.createElement('div');
+  row.className = 'ed-item';
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 60px 50px 80px 28px;gap:4px;align-items:center;';
+  const p = preset || {};
+  row.innerHTML = `
+    <input class="ei-name" placeholder="品名" value="${(p.name || '').replace(/"/g,'&quot;')}" style="padding:6px 8px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:white;">
+    <input class="ei-qty" type="number" placeholder="數量" value="${p.qty || ''}" style="padding:6px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:white;text-align:center;">
+    <input class="ei-unit" placeholder="單位" value="${(p.unit || '式').replace(/"/g,'&quot;')}" style="padding:6px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:white;text-align:center;">
+    <input class="ei-price" type="number" placeholder="單價" value="${p.price || ''}" style="padding:6px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:white;text-align:right;">
+    <button type="button" class="ei-del" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-weight:700;">×</button>
+  `;
+  row.querySelector('.ei-del').addEventListener('click', () => { row.remove(); edRecalc(); });
+  row.querySelectorAll('input').forEach(i => i.addEventListener('input', edRecalc));
+  box.appendChild(row);
+  edRecalc();
+}
+
+function edRecalc() {
+  let subtotal = 0;
+  document.querySelectorAll('#ed_items_box .ed-item').forEach(row => {
+    const qty = parseFloat(row.querySelector('.ei-qty').value) || 0;
+    const price = parseFloat(row.querySelector('.ei-price').value) || 0;
+    subtotal += Math.round(qty * price);
+  });
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + tax;
+  document.getElementById('ed_subtotal').textContent = 'NT$' + subtotal.toLocaleString();
+  document.getElementById('ed_tax').textContent = 'NT$' + tax.toLocaleString();
+  document.getElementById('ed_total').textContent = 'NT$' + total.toLocaleString();
+  // 有項目時自動同步金額欄位
+  if (subtotal > 0) {
+    document.getElementById('ed_amount').value = total;
+  }
+}
+
+function edGetItems() {
+  const items = [];
+  document.querySelectorAll('#ed_items_box .ed-item').forEach(row => {
+    const name = row.querySelector('.ei-name').value.trim();
+    const qty = parseFloat(row.querySelector('.ei-qty').value) || 0;
+    const unit = row.querySelector('.ei-unit').value.trim() || '式';
+    const price = parseFloat(row.querySelector('.ei-price').value) || 0;
+    if (name && qty > 0 && price > 0) {
+      items.push({ name, qty, unit, price });
+    }
+  });
+  return items;
+}
+
 function openEdit(id) {
   const q = allQuotes.find(x => x.id === id);
   if (!q) return;
@@ -327,6 +419,16 @@ function openEdit(id) {
   document.getElementById('ed_amount').value = q.amount || '';
   document.getElementById('ed_status').value = q.status || 'draft';
   document.getElementById('ed_notes').value = q.notes || '';
+  // 載入項目明細
+  const box = document.getElementById('ed_items_box');
+  box.innerHTML = '';
+  const items = (q.data && Array.isArray(q.data.items)) ? q.data.items : [];
+  if (items.length === 0) {
+    edAddItem(); // 給一列空的可填（含舊 quote）
+  } else {
+    items.forEach(it => edAddItem(it));
+  }
+  edRecalc();
   document.getElementById('modal').classList.add('show');
 }
 
@@ -337,15 +439,40 @@ function closeModal() {
 
 async function saveEdit() {
   if (!editingId) return;
-  const payload = {
+  const q = allQuotes.find(x => x.id === editingId);
+  const items = edGetItems();
+  const subtotal = items.reduce((s, it) => s + Math.round(it.qty * it.price), 0);
+  const tax = Math.round(subtotal * 0.05);
+  const calcTotal = subtotal + tax;
+  const manualAmount = parseFloat(document.getElementById('ed_amount').value) || 0;
+  // 有項目就用算的，沒項目就用手動填的
+  const finalAmount = items.length > 0 ? calcTotal : manualAmount;
+
+  // 合併 data jsonb（保留現有未編輯的欄位，如 customer_tax_id / project_name 等）
+  const existingData = (q && q.data && typeof q.data === 'object') ? q.data : {};
+  const newData = items.length > 0 ? {
+    ...existingData,
+    items: items,
+    subtotal: subtotal,
+    tax: tax,
+    amount: finalAmount,
+    tax_rate: 0.05,
+    quote_number: document.getElementById('ed_qno').value,
     customer_name: document.getElementById('ed_name').value.trim(),
     customer_phone: document.getElementById('ed_phone').value.trim(),
+  } : (existingData.items ? existingData : null);
+
+  const payload = {
+    customer_name: document.getElementById('ed_name').value.trim(),
+    customer_phone: document.getElementById('ed_phone').value.trim() || null,
     region: document.getElementById('ed_region').value || null,
     district: document.getElementById('ed_district').value.trim() || null,
     service_category: document.getElementById('ed_service').value.trim(),
-    amount: parseFloat(document.getElementById('ed_amount').value) || 0,
+    description: items.length > 0 ? items.map(it => `${it.name} x${it.qty}${it.unit}`).join('、') : null,
+    amount: finalAmount,
     status: document.getElementById('ed_status').value,
     notes: document.getElementById('ed_notes').value.trim() || null,
+    data: newData,
   };
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/quick_quotes?id=eq.' + editingId, {
@@ -376,23 +503,39 @@ async function regenPDF() {
   if (!q) return;
   if (!confirm('確定要重新產這張報價單的 PDF 並推 Telegram 嗎？')) return;
   try {
-    const payload = {
-      command_type: 'quote_regen',
-      payload: { quote_id: editingId, quote_number: q.quote_number },
-      preview: '🔄 重新產：' + (q.quote_number || '') + ' / ' + (q.customer_name || ''),
-      status: 'pending',
-      source: 'pwa_quotes_html'
+    // 用 command_type='quote'（桌機 worker handle_quote 已認識），
+    // command_data 給完整 data（worker 不用再查 DB）。
+    // 舊 quote (data=NULL) fallback 給最少資訊，由 worker 自行決定怎麼產。
+    const existingData = (q.data && typeof q.data === 'object') ? q.data : {};
+    const commandData = {
+      ...existingData,
+      quote_id: editingId,
+      quote_number: q.quote_number || '',
+      customer_name: q.customer_name || '',
+      customer_phone: q.customer_phone || existingData.customer_phone || '',
+      service_category: q.service_category || '',
+      amount: parseFloat(q.amount) || existingData.amount || 0,
+      items: Array.isArray(existingData.items) ? existingData.items : [],
+      regen: true,  // 旗標：worker 可由此判斷是「重產」而非「新建」
     };
     const r = await fetch(SUPABASE_URL + '/rest/v1/command_logs', {
       method: 'POST',
       headers: { ...H, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        command_type: 'quote',
+        command_data: commandData,
+        source: 'pwa_quotes_regen',
+      })
     });
     if (r.ok) {
-      toast('✅ 指令已派發，桌機 worker 重產中（30 秒內推 Telegram）');
+      // 喚醒桌機 command_worker（它靠 Telegram getUpdates 為主迴圈，光 INSERT Supabase 不夠！）
+      const preview = `📄 ${q.quote_number || ''}\n${q.customer_name || ''} - ${q.service_category || ''}\n🔄 重產 PDF (NT$ ${parseFloat(q.amount).toLocaleString()})`;
+      notifyTelegram(`🎯 [指令] quote\n${preview}`);
+      toast('✅ 已派發，桌機 worker 重產中（30 秒內推 Telegram）');
       closeModal();
     } else {
-      toast('❌ 派發失敗：' + r.status);
+      const t = await r.text();
+      toast('❌ 派發失敗：' + r.status + ' ' + t.slice(0, 60));
     }
   } catch (e) {
     toast('❌ 網路錯誤');
