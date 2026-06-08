@@ -398,7 +398,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
     <div class="section-title">🎯 主要操作</div>
     <div class="grid">
       <div class="action primary" onclick="showPage('quote')"><span class="emoji">💰</span><div class="name">產報價單</div></div>
-      <div class="action" style="background:linear-gradient(135deg,#0f172a,#1e293b);color:white;" onclick="location.href='quotes.html'"><span class="emoji">📋</span><div class="name">報價單管理</div></div>
+      <div class="action" style="background:linear-gradient(135deg,#0f172a,#1e293b);color:white;" onclick="showPage('quotes_list')"><span class="emoji">📋</span><div class="name">報價單管理</div></div>
       <div class="action dark" onclick="showPage('customer')"><span class="emoji">👤</span><div class="name">新增客戶</div></div>
       <div class="action success" onclick="showPage('photo_order')"><span class="emoji">📸</span><div class="name">拍照建單</div></div>
       <div class="action purple" onclick="showPage('voice')"><span class="emoji">🎙️</span><div class="name">語音記錄</div></div>
@@ -417,6 +417,16 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <div style="flex:1;">
         <div style="font-size:15px;font-weight:700;">開始批次留言</div>
         <div style="font-size:12px;opacity:0.9;" id="queuedCount">載入中...</div>
+      </div>
+      <span style="font-size:24px;">→</span>
+    </div>
+
+    <div class="section-title">⚡ 1 鍵派任務</div>
+    <div onclick="quickDispatchImage()" id="quickDispatchBtn" style="background:linear-gradient(135deg,#FF6B35,#FF8C5A);color:white;padding:18px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 4px 12px rgba(255,107,53,0.35);margin-top:6px;">
+      <span style="font-size:36px;">🎨</span>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;">1 鍵派代言人圖（2 張）</div>
+        <div style="font-size:12px;opacity:0.92;margin-top:2px;" id="quickDispatchTopic">今日主題載入中…</div>
       </div>
       <span style="font-size:24px;">→</span>
     </div>
@@ -653,6 +663,18 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;">📋 最近 30 趟 <span id="mileageCount" style="background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;">0</span></h3>
       <div id="mileageList"></div>
     </div>
+  </div>
+
+  <!-- 報價單管理（iframe 內嵌 quotes.html?embed=1） -->
+  <div class="page" id="page-quotes_list">
+    <div style="background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:14px;border-radius:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:18px;font-weight:800;">📋 報價單管理</div>
+        <div style="font-size:11px;opacity:0.8;margin-top:2px;">編輯 · 區域分類 · 重新產 PDF</div>
+      </div>
+      <button onclick="document.getElementById('quotesListFrame').contentWindow.location.reload()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;">🔄</button>
+    </div>
+    <iframe id="quotesListFrame" src="about:blank" style="width:100%;height:calc(100vh - 160px);border:none;border-radius:14px;background:white;display:block;"></iframe>
   </div>
 
   <!-- 設定 -->
@@ -1040,6 +1062,13 @@ function showPage(name) {
   if (name === 'calendar') loadEvents();
   else if (name === 'expense') loadExpenses();
   else if (name === 'mileage') loadMileage();
+  // 報價單管理：lazy load iframe（首次切換才載入，後續切回保留狀態不重 fetch）
+  if (name === 'quotes_list') {
+    const f = document.getElementById('quotesListFrame');
+    if (f && f.src === 'about:blank') {
+      f.src = 'quotes.html?embed=1';
+    }
+  }
 }
 
 // ============ ZONE: 共用 ============
@@ -1623,8 +1652,13 @@ async function generateQuote() {
         body: JSON.stringify({
           quote_number: data.quote_number,
           customer_name: name,
+          customer_phone: data.customer_phone || null,
           service_category: project,
+          description: items.map(it => `${it.name} x${it.qty}${it.unit||'式'}`).join('、'),
           amount: total,
+          status: 'sent',
+          source: 'pwa',
+          data: data, // 整包含 items 明細、subtotal、tax、客戶資料
         }),
       });
     } catch (e) {}
@@ -2221,6 +2255,79 @@ function capturePhoto() {
     } catch (e) { toast('⚠️ 失敗'); }
   };
   input.click();
+}
+
+// ========= ⚡ 1 鍵派代言人圖（主畫面快速派）=========
+// 10 個 LAYSHOW 戰略主題，按 dayOfYear 輪替（每天不重複）
+const DAILY_THEMES = [
+  '代言人在台中民宿大廳檢查水電配線 - B2B 維護方案',
+  '代言人專業形象 + 7 日保固徽章 - 唯一保固承諾',
+  '代言人在診所走廊修燈管 - 醫療場域水電專業',
+  '代言人現場修廚房水管 - 即時叫修速度',
+  '代言人在餐廳廚房檢視排油煙 - B2B 整合維護包',
+  '代言人帶領師傅團隊出勤 - 招募氛圍',
+  '代言人在社區管理室裝監視器 - 數位後援',
+  '代言人在工地檢視冷氣 - 夏季維護旺季',
+  '代言人在超商修冰箱設備 - B2B 連鎖維護',
+  '代言人 + 鈺欣霆工程車 - 在地深耕台中',
+];
+
+function getTodayTheme() {
+  const d = new Date();
+  const start = new Date(d.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((d - start) / 86400000);
+  return { idx: dayOfYear % DAILY_THEMES.length, text: DAILY_THEMES[dayOfYear % DAILY_THEMES.length] };
+}
+
+function refreshQuickDispatchTopic() {
+  const el = document.getElementById('quickDispatchTopic');
+  if (!el) return;
+  const t = getTodayTheme();
+  el.textContent = `#${t.idx + 1}/${DAILY_THEMES.length}：${t.text}`;
+}
+
+async function quickDispatchImage() {
+  const s = getS();
+  if (!s.supabaseKey) { toast('⚠️ 先到設定填 Supabase Key'); showPage('settings'); return; }
+  const t = getTodayTheme();
+  if (!confirm(`派代言人圖 2 張？\n\n主題 #${t.idx + 1}：${t.text}`)) return;
+
+  const btn = document.getElementById('quickDispatchBtn');
+  if (btn) btn.style.opacity = '0.6';
+  try {
+    const r = await fetch(`${s.supabaseUrl}/rest/v1/image_requests`, {
+      method: 'POST',
+      headers: {
+        'apikey': s.supabaseKey,
+        'Authorization': `Bearer ${s.supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        user_topic: t.text,
+        image_type: 'b2b_ad',
+        count: 2,
+        source: 'pwa_quick'
+      })
+    });
+    if (r.ok) {
+      toast(`✅ 已派 #${t.idx + 1}，5-10 分鐘到 Telegram`, 3500);
+    } else {
+      const txt = await r.text();
+      toast('❌ ' + txt.slice(0, 80));
+    }
+  } catch (e) {
+    toast('❌ 網路錯誤');
+  } finally {
+    if (btn) btn.style.opacity = '1';
+  }
+}
+
+// 頁面載入時立刻顯示今日主題
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', refreshQuickDispatchTopic);
+} else {
+  setTimeout(refreshQuickDispatchTopic, 100);
 }
 
 // ========= 🎨 派軍師管家生圖（image_studio）=========
