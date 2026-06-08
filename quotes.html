@@ -228,6 +228,7 @@ body.embed .app { padding-top: 4px; }
       <button class="btn btn-save" onclick="saveEdit()">💾 儲存</button>
       <button class="btn btn-regen" onclick="regenPDF()">🔄 重產 PDF</button>
     </div>
+    <button class="btn" onclick="deleteQuote()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;width:100%;margin-top:10px;padding:11px;font-size:13px;font-weight:700;">🗑️ 刪除此報價單（不可復原）</button>
   </div>
 </div>
 
@@ -495,6 +496,29 @@ async function saveEdit() {
 async function regenById(id) {
   editingId = id;
   await regenPDF();
+}
+
+async function deleteQuote() {
+  if (!editingId) return;
+  const q = allQuotes.find(x => x.id === editingId);
+  if (!q) return;
+  if (!confirm(`⚠️ 確定刪除？\n\n${q.quote_number || ''} / ${q.customer_name || ''}\nNT$ ${parseFloat(q.amount || 0).toLocaleString()}\n\n此操作無法復原。`)) return;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/quick_quotes?id=eq.' + editingId, {
+      method: 'DELETE',
+      headers: H,
+    });
+    if (r.ok || r.status === 204) {
+      toast('✅ 已刪除');
+      closeModal();
+      await loadQuotes();
+    } else {
+      const t = await r.text();
+      toast('❌ 刪除失敗：' + r.status + ' ' + t.slice(0,60));
+    }
+  } catch (e) {
+    toast('❌ 網路錯誤');
+  }
 }
 
 async function regenPDF() {
