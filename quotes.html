@@ -63,8 +63,14 @@ body {
 .tag.region { background: #dbeafe; color: #1e40af; }
 .tag.district { background: #d1fae5; color: #065f46; }
 .tag.notags { background: #f3f4f6; color: #6b7280; }
-.tag.status-sent { background: #d1fae5; color: #065f46; }
 .tag.status-draft { background: #fef3c7; color: #92400e; }
+.tag.status-sent { background: #dbeafe; color: #1e40af; }
+.tag.status-accepted { background: #d1fae5; color: #065f46; }
+.tag.status-dispatched { background: #ede9fe; color: #5b21b6; }
+.tag.status-in_progress { background: #fed7aa; color: #9a3412; font-weight: 800; }
+.tag.status-completed { background: #bbf7d0; color: #14532d; }
+.tag.status-paid { background: #14532d; color: #fff; }
+.tag.status-cancelled { background: #e5e7eb; color: #4b5563; }
 
 .actions { display: flex; gap: 6px; margin-top: 10px; }
 .btn {
@@ -147,9 +153,16 @@ body.embed .app { padding-top: 4px; }
     </select>
     <select id="filterStatus">
       <option value="">全部狀態</option>
-      <option value="sent">已寄出</option>
-      <option value="draft">草稿</option>
-      <option value="paid">已收款</option>
+      <option value="__active__">🔥 進行中（派工到完工）</option>
+      <option value="__unpaid__">⏳ 待收款（完工但沒付）</option>
+      <option value="draft">📝 草稿</option>
+      <option value="sent">📤 已寄出</option>
+      <option value="accepted">✅ 客戶確認</option>
+      <option value="dispatched">🚐 已派工</option>
+      <option value="in_progress">🔧 施工中</option>
+      <option value="completed">🎉 完工</option>
+      <option value="paid">💰 已收款</option>
+      <option value="cancelled">❌ 已取消</option>
     </select>
     <input id="filterSearch" placeholder="搜尋客戶/編號...">
   </div>
@@ -213,10 +226,14 @@ body.embed .app { padding-top: 4px; }
     <div class="field">
       <label>狀態</label>
       <select id="ed_status">
-        <option value="draft">草稿</option>
-        <option value="sent">已寄出</option>
-        <option value="paid">已收款</option>
-        <option value="cancelled">已取消</option>
+        <option value="draft">📝 草稿</option>
+        <option value="sent">📤 已寄出</option>
+        <option value="accepted">✅ 客戶確認</option>
+        <option value="dispatched">🚐 已派工</option>
+        <option value="in_progress">🔧 施工中</option>
+        <option value="completed">🎉 完工</option>
+        <option value="paid">💰 已收款</option>
+        <option value="cancelled">❌ 已取消</option>
       </select>
     </div>
     <div class="field">
@@ -271,6 +288,25 @@ async function notifyTelegram(text) {
 let allQuotes = [];
 let editingId = null;
 
+// ===== 報價單狀態完整流轉配置 =====
+const STATUS_LABELS = {
+  draft:       { emoji: '📝', text: '草稿' },
+  sent:        { emoji: '📤', text: '已寄出' },
+  accepted:    { emoji: '✅', text: '客戶確認' },
+  dispatched:  { emoji: '🚐', text: '已派工' },
+  in_progress: { emoji: '🔧', text: '施工中' },
+  completed:   { emoji: '🎉', text: '完工' },
+  paid:        { emoji: '💰', text: '已收款' },
+  cancelled:   { emoji: '❌', text: '已取消' },
+};
+const ACTIVE_STATUSES = ['accepted','dispatched','in_progress']; // 進行中：接到單但還沒完工
+const UNPAID_STATUSES = ['completed']; // 完工但還沒付錢
+
+function statusLabel(s) {
+  const cfg = STATUS_LABELS[s];
+  return cfg ? `${cfg.emoji} ${cfg.text}` : (s || '—');
+}
+
 function toast(msg, ms = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -317,7 +353,9 @@ function renderList() {
 
   let list = allQuotes;
   if (fRegion) list = list.filter(q => q.region === fRegion);
-  if (fStatus) list = list.filter(q => q.status === fStatus);
+  if (fStatus === '__active__') list = list.filter(q => ACTIVE_STATUSES.includes(q.status));
+  else if (fStatus === '__unpaid__') list = list.filter(q => UNPAID_STATUSES.includes(q.status));
+  else if (fStatus) list = list.filter(q => q.status === fStatus);
   if (fSearch) list = list.filter(q =>
     (q.customer_name || '').toLowerCase().includes(fSearch) ||
     (q.quote_number || '').toLowerCase().includes(fSearch) ||
@@ -335,7 +373,7 @@ function renderList() {
     const regionTag = q.region ? `<span class="tag region">📍${q.region}</span>` : '';
     const districtTag = q.district ? `<span class="tag district">${q.district}</span>` : '';
     const noRegionTag = (!q.region && !q.district) ? '<span class="tag notags">未分區</span>' : '';
-    const statusTag = q.status ? `<span class="tag status-${q.status}">${q.status}</span>` : '';
+    const statusTag = q.status ? `<span class="tag status-${q.status}">${statusLabel(q.status)}</span>` : '';
     const ver = q.version > 1 ? ` <span class="tag" style="background:#fef3c7;color:#92400e;">v${q.version}</span>` : '';
     return `
       <div class="quote">
