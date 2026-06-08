@@ -22,14 +22,14 @@
 body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overscroll-behavior-y: none; }
 .app { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
 
-.header { background: linear-gradient(135deg, var(--dark), #1a4a8a); color: white; padding: 20px 16px; border-radius: 20px; margin: -16px -16px 20px; position: relative; overflow: hidden; }
-.header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; background: var(--primary); opacity: 0.2; }
-.header h1 { font-size: 22px; font-weight: 800; }
-.header .greet { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 20px 16px; border-radius: 20px; margin: -16px -16px 20px; position: relative; overflow: hidden; box-shadow: 0 4px 16px rgba(30,58,138,0.3); }
+.header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; background: var(--primary); opacity: 0.3; }
+.header h1 { font-size: 22px; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+.header .greet { font-size: 14px; opacity: 1.0; margin-top: 4px; font-weight: 600; }
 .header .stats { display: flex; gap: 12px; margin-top: 16px; }
-.stat { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 10px 14px; border-radius: 12px; flex: 1; }
-.stat .label { font-size: 11px; opacity: 0.8; }
-.stat .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.stat { background: rgba(255,255,255,0.28); backdrop-filter: blur(12px); padding: 10px 14px; border-radius: 12px; flex: 1; border: 1px solid rgba(255,255,255,0.15); }
+.stat .label { font-size: 12px; opacity: 1.0; font-weight: 600; color: #fff; }
+.stat .value { font-size: 22px; font-weight: 800; margin-top: 2px; color: #fff; }
 
 .live-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; background: rgba(16,185,129,0.2); border-radius: 12px; margin-left: 8px; }
 .live-indicator .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: blink 1.5s infinite; }
@@ -216,20 +216,20 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
   <div class="page active" id="page-home">
 
     <!-- ====== 🛡️ 軍師管家 - 今日 3 件事（最高優先）====== -->
-    <div id="todayTop3" style="background:linear-gradient(135deg,#0c2340 0%,#1a3a5c 50%,#F37021 200%);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 6px 20px rgba(243,112,33,0.25);">
+    <div id="todayTop3" style="background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 60%,#F37021 200%);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 6px 20px rgba(59,130,246,0.35);border:1px solid rgba(255,255,255,0.1);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <div>
-          <div style="font-size:11px;opacity:0.85;letter-spacing:2px;">🎖️ 軍師管家 · 今日 3 件事</div>
-          <div id="top3Greet" style="font-size:16px;font-weight:700;margin-top:2px;">早安老闆</div>
+          <div style="font-size:11px;opacity:1.0;letter-spacing:2px;color:#fff;font-weight:600;">🎖️ 軍師管家 · 今日 3 件事</div>
+          <div id="top3Greet" style="font-size:17px;font-weight:800;margin-top:3px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.2);">早安逸霆</div>
         </div>
-        <div onclick="askStrategist()" style="background:rgba(255,255,255,0.18);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;">
+        <div onclick="askStrategist()" style="background:rgba(255,255,255,0.3);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700;color:#fff;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);">
           💬 問軍師管家
         </div>
       </div>
       <div id="top3List" style="display:flex;flex-direction:column;gap:8px;">
-        <div style="background:rgba(255,255,255,0.12);padding:12px;border-radius:10px;font-size:13px;">⏳ 載入中...</div>
+        <div style="background:rgba(255,255,255,0.22);padding:12px;border-radius:10px;font-size:13px;color:#fff;font-weight:500;">⏳ 載入中...</div>
       </div>
-      <div style="font-size:10px;opacity:0.6;margin-top:8px;text-align:right;" id="familyTimeCountdown">
+      <div style="font-size:10px;opacity:0.85;margin-top:8px;text-align:right;color:#fff;" id="familyTimeCountdown">
         🏠 家人時間 19:00-20:30 軍師管家自動閉嘴
       </div>
     </div>
