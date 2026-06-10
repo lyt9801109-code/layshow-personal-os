@@ -269,7 +269,7 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const H = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON };
 
 // Telegram bot 通知（桌機 command_worker 靠 Telegram getUpdates 喚醒，光 INSERT Supabase 不夠）
-const TG_TOKEN = '8585783388:AAFldD2N1ASet7AzpJ-FJbl1Psj8hdMIcOQ';
+const TG_TOKEN = '';
 const TG_CHAT = '@layshow888';
 
 async function notifyTelegram(text) {
