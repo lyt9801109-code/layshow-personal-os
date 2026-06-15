@@ -387,6 +387,7 @@ function renderList() {
         <div class="actions">
           <button class="btn btn-edit" onclick="openEdit(${q.id})">✏️ 編輯</button>
           <button class="btn btn-regen" onclick="regenById(${q.id})">🔄 重產 PDF</button>
+          ${q.pdf_url ? `<a class="btn btn-pdf" href="${q.pdf_url}" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📥 下載 PDF</a>` : ''}
         </div>
       </div>
     `;
@@ -536,6 +537,24 @@ async function regenById(id) {
   await regenPDF();
 }
 
+// 輪詢這張報價單的 pdf_url，產好就刷新列表 + 提示可下載（最多 ~90 秒）
+async function pollQuotePdf(id) {
+  const before = (allQuotes.find(x => x.id === id) || {}).pdf_url || null;
+  for (let i = 0; i < 18; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/quick_quotes?id=eq.' + id + '&select=pdf_url', { headers: H });
+      const j = await res.json();
+      const url = j && j[0] && j[0].pdf_url;
+      if (url && url !== before) {
+        await loadQuotes();
+        toast('📥 報價單 PDF 已產好，點「下載 PDF」即可');
+        return;
+      }
+    } catch (e) { /* 繼續等 */ }
+  }
+}
+
 async function deleteQuote() {
   if (!editingId) return;
   const q = allQuotes.find(x => x.id === editingId);
@@ -587,14 +606,17 @@ async function regenPDF() {
         command_type: 'quote',
         command_data: commandData,
         source: 'pwa_quotes_regen',
+        status: 'pending',  // 明設 pending → 桌機 worker 的 Supabase 輪詢一定掃得到（不靠 TG 喚醒）
       })
     });
     if (r.ok) {
-      // 喚醒桌機 command_worker（它靠 Telegram getUpdates 為主迴圈，光 INSERT Supabase 不夠！）
+      // 備援喚醒（TG token 有設才生效；沒設也沒關係，worker 會自己輪詢 Supabase）
       const preview = `📄 ${q.quote_number || ''}\n${q.customer_name || ''} - ${q.service_category || ''}\n🔄 重產 PDF (NT$ ${parseFloat(q.amount).toLocaleString()})`;
       notifyTelegram(`🎯 [指令] quote\n${preview}`);
-      toast('✅ 已派發，桌機 worker 重產中（30 秒內推 Telegram）');
+      toast('✅ 已派發，約 30 秒後下載鈕會出現（自動刷新）');
       closeModal();
+      // 主動輪詢這張單的 pdf_url，出現就提示可下載
+      pollQuotePdf(editingId);
     } else {
       const t = await r.text();
       toast('❌ 派發失敗：' + r.status + ' ' + t.slice(0, 60));
