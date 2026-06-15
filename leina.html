@@ -34,6 +34,11 @@ body{background:radial-gradient(900px 500px at 50% -5%,#16294a,#0a1424 60%),#0a1
 .in input{flex:1;padding:12px 15px;border-radius:24px;border:1px solid #24344a;background:#0f1d33;color:#eaf2fc;font-size:15px;outline:none}
 .in button{padding:0 18px;border:none;border-radius:24px;background:linear-gradient(120deg,#f37021,#ff8a3d);color:#fff;font-weight:800;font-size:15px}
 .in button:disabled{opacity:.5}
+.in #mic{padding:0 14px;background:#13243d;border:1px solid #24344a;font-size:18px}
+.in #mic.rec{background:#ff3b30;border-color:#ff3b30}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:6px 12px 4px}
+.chip{flex:0 0 auto;padding:7px 12px;border-radius:999px;border:1px solid #24344a;background:#0f1d33;color:#aecbe8;font-size:12.5px;font-weight:700;white-space:nowrap}
+.feed-act{display:inline-block;margin-top:6px;font-size:12px;color:#ff8a3d;font-weight:800}
 .home{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:12px;z-index:5;background:rgba(15,29,51,.7);border:1px solid #24344a;color:#aecbe8;border-radius:999px;padding:5px 11px;font-size:12px;text-decoration:none}
 </style>
 </head>
@@ -45,7 +50,8 @@ body{background:radial-gradient(900px 500px at 50% -5%,#16294a,#0a1424 60%),#0a1
   <div class="bubble" id="bubble"></div>
 </div>
 <div class="msgs" id="msgs"></div>
-<div class="in"><input id="input" placeholder="跟雷娜說話…" autocomplete="off"><button id="send">送出</button></div>
+<div class="chips" id="chips"></div>
+<div class="in"><button id="mic" title="按住說話">🎤</button><input id="input" placeholder="跟雷娜說話…" autocomplete="off"><button id="send">送出</button></div>
 <script>
 var SUPA='https://ujaogedhwcbyczzpgzpy.supabase.co';
 var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYW9nZWRod2NieWN6enBnenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwOTk0ODAsImV4cCI6MjA5MjY3NTQ4MH0.8zWp-rDr8RXhSETxW1cGE4G68KqNZ-UfH74lbILBVxg';
@@ -83,6 +89,30 @@ async function send(){
 }
 elSend.onclick=send;elIn.addEventListener('keydown',function(e){if(e.key==='Enter')send()});
 
+// 一鍵問（快捷鈕 / feed 一鍵跟雷娜談）
+function quickAsk(text){elIn.value=text;send();}
+window.leinaAsk=quickAsk;
+
+// 快捷問句列（依軍官給常用問句）
+var QUICK={'軍師':['今日最重要3件事','有什麼盲點','該打哪幾家B2B'],'財務官':['錢的狀況','待收款多少','這月賺多少'],'B2B軍師':['今天該打哪幾家','給我開場話術','管線卡在哪'],'戰情官':['系統正常嗎','今天有急件嗎','最近註冊狀況'],'獵客官':['雷達抓到誰','怎麼回他','哪個最值得追']};
+function renderChips(){
+  var box=document.getElementById('chips');var qs=QUICK[cur]||QUICK['軍師'];
+  box.innerHTML=qs.map(function(q){return '<button class="chip">'+esc(q)+'</button>'}).join('');
+  box.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){quickAsk(b.textContent)}});
+}
+var _ro=renderOffs;renderOffs=function(){_ro();renderChips();};
+
+// 🎤 語音輸入（Web Speech；按一下開始講，講完自動送）
+var mic=document.getElementById('mic');
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){
+  var rec=new SR();rec.lang='zh-TW';rec.interimResults=false;rec.maxAlternatives=1;var listening=false;
+  mic.onclick=function(){ if(busy)return; if(listening){try{rec.stop()}catch(e){}return;} try{rec.start();listening=true;mic.classList.add('rec');}catch(e){} };
+  rec.onresult=function(e){var t=e.results[0][0].transcript;elIn.value=t;};
+  rec.onerror=function(){listening=false;mic.classList.remove('rec');};
+  rec.onend=function(){listening=false;mic.classList.remove('rec'); if((elIn.value||'').trim())send();};
+}else{ mic.style.display='none'; }
+
 // 雷娜主動提醒 feed：開頁就把桌面各官丟來的情報秀出來（無時無刻在身邊）
 async function loadFeed(){
   try{
@@ -94,9 +124,12 @@ async function loadFeed(){
     var items=(fresh.length?fresh:rows.slice(0,3));
     var head=fresh.length?('💎 少爺，我趁你不在時幫你盯著，這些要看一下：'):('💎 最近的提醒：');
     var html='<div class="m a"><b>'+head+'</b></div>'+items.map(function(f){
-      return '<div class="m a">'+(f.emoji||'💎')+' <b>'+esc(f.title)+'</b>'+(f.body?'\\n'+esc(String(f.body).slice(0,300)):'')+'</div>';
+      var ask=('關於「'+f.title+'」這件，幫我判斷怎麼處理？').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+      return '<div class="m a">'+(f.emoji||'💎')+' <b>'+esc(f.title)+'</b>'+(f.body?'\\n'+esc(String(f.body).slice(0,300)):'')
+        +'<br><span class="feed-act" data-ask="'+ask+'">▸ 跟雷娜談這件</span></div>';
     }).join('');
     box.insertAdjacentHTML('afterbegin',html);
+    box.querySelectorAll('.feed-act').forEach(function(s){s.onclick=function(){quickAsk(s.getAttribute('data-ask'))}});
     // 把最新一則放上站姿氣泡
     if(items[0]){elBub.textContent=(items[0].emoji||'💎')+' '+items[0].title;elBub.classList.add('show');}
     localStorage.setItem('leina_feed_seen',String(rows[0].id));
