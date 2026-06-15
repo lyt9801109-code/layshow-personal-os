@@ -1,0 +1,24 @@
+{
+  "name": "雷娜 · 隨身軍師",
+  "short_name": "雷娜",
+  "start_url": "leina.html",
+  "scope": "leina.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1424",
+  "theme_color": "#0a1424",
+  "icons": [
+    {
+      "src": "https://ujaogedhwcbyczzpgzpy.supabase.co/storage/v1/object/public/ai-generated-images/leina_bust.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "https://ujaogedhwcbyczzpgzpy.supabase.co/storage/v1/object/public/ai-generated-images/leina_bust.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
