@@ -82,7 +82,28 @@ async function send(){
   busy=false;elSend.disabled=false;renderMsgs();
 }
 elSend.onclick=send;elIn.addEventListener('keydown',function(e){if(e.key==='Enter')send()});
-renderOffs();renderMsgs();
+
+// 雷娜主動提醒 feed：開頁就把桌面各官丟來的情報秀出來（無時無刻在身邊）
+async function loadFeed(){
+  try{
+    var r=await fetch(SUPA+'/rest/v1/leina_feed?select=id,emoji,officer,title,body,created_at&order=id.desc&limit=20',{headers:{apikey:ANON,Authorization:'Bearer '+ANON}});
+    var rows=await r.json();if(!Array.isArray(rows)||!rows.length)return;
+    var seen=parseInt(localStorage.getItem('leina_feed_seen')||'0',10);
+    var fresh=rows.filter(function(x){return x.id>seen;});
+    var box=document.getElementById('msgs');
+    var items=(fresh.length?fresh:rows.slice(0,3));
+    var head=fresh.length?('💎 少爺，我趁你不在時幫你盯著，這些要看一下：'):('💎 最近的提醒：');
+    var html='<div class="m a"><b>'+head+'</b></div>'+items.map(function(f){
+      return '<div class="m a">'+(f.emoji||'💎')+' <b>'+esc(f.title)+'</b>'+(f.body?'\\n'+esc(String(f.body).slice(0,300)):'')+'</div>';
+    }).join('');
+    box.insertAdjacentHTML('afterbegin',html);
+    // 把最新一則放上站姿氣泡
+    if(items[0]){elBub.textContent=(items[0].emoji||'💎')+' '+items[0].title;elBub.classList.add('show');}
+    localStorage.setItem('leina_feed_seen',String(rows[0].id));
+  }catch(e){}
+}
+
+renderOffs();renderMsgs();loadFeed();
 </script>
 </body>
 </html>
