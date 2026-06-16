@@ -1538,63 +1538,27 @@ async function aiEstimate() {
   const desc = document.getElementById('qAIDesc').value.trim();
   if (!desc) { toast('⚠️ 請先描述工程內容'); return; }
   const s = getS();
-  if (!s.anthropicKey) { toast('⚠️ 設定頁先貼 Anthropic API Key'); showPage('settings'); return; }
-
   const btn = document.getElementById('aiEstBtn');
   btn.disabled = true;
-  btn.textContent = '🧠 Claude 分析中...';
-  toast('🤖 Claude 估價中...');
+  btn.textContent = '🧠 AI 分析中...';
+  toast('🤖 AI 估價中...');
 
   const projectCustom = document.getElementById('qProjectCustom').value.trim();
   const project = projectCustom || document.getElementById('qProject').value;
 
-  const systemPrompt = `你是 LAYSHOW 雷修（鈺欣霆實業）的資深報價師。請依客戶需求拆解成 3-8 個合理項目，**只回 JSON 不要其他文字**：
-{
-  "items": [
-    {"name":"品名規格(含廠牌型號)", "qty":數字, "unit":"單位(只/組/米/式/個/盞)", "price":單價數字, "note":"備註"}
-  ]
-}
-
-定價參考（台中市場合理範圍）：
-- 斷路器更換 60A3P：約 1500-2000
-- 220V 插座（星光/國際）：約 600-900
-- 8 平方電纜線：每米 400-550
-- PVC 6 分電管：每米 120-180
-- 五金另料：每場 2000-3500
-- 工資（日薪）：3500-5000
-- 冷氣安裝：分離式 3500-6000
-- 水管漏水修補：3000-6000
-- 通水管：1500-3000
-
-工程類別：${project}
-僅回 JSON。`;
-
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    // 走 Supabase edge function（金鑰留伺服器，手機不再需要 Claude key→報價不會再掉單）
+    const r = await fetch(`${s.supabaseUrl}/functions/v1/quote-parse`, {
       method: 'POST',
-      headers: {
-        'x-api-key': s.anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1500,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: desc }],
-      }),
+      headers: { 'Content-Type': 'application/json', apikey: s.supabaseKey, 'Authorization': 'Bearer ' + s.supabaseKey },
+      body: JSON.stringify({ desc, project }),
     });
     const d = await r.json();
-    if (!d.content || !d.content[0]) {
-      toast('❌ Claude 沒回應');
+    if (!d.ok || !Array.isArray(d.items) || !d.items.length) {
+      toast('❌ ' + (d.error || 'AI 沒回應'));
       btn.disabled = false; btn.textContent = '🤖 AI 估價'; return;
     }
-    let text = d.content[0].text;
-    // 抓 JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) { toast('⚠️ 解析失敗'); btn.disabled = false; btn.textContent = '🤖 AI 估價'; return; }
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = { items: d.items };
 
     // 清空現有項目
     document.getElementById('quoteItems').innerHTML = '';
