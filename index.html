@@ -699,8 +699,10 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
       <div class="form-group"><label class="form-label">Telegram Bot Token</label><input type="text" class="form-input" id="tgToken"></div>
       <div class="form-group"><label class="form-label">Telegram Chat ID</label><input type="text" class="form-input" id="tgChat"></div>
       <div class="form-group">
-        <label class="form-label">🧠 Anthropic API Key（PWA 直連 Claude）</label>
-        <input type="text" class="form-input" id="anthropicKey" placeholder="sk-ant-api03-...">
+        <label class="form-label">🧠 Anthropic API Key <span style="color:#16a34a;font-weight:700;">（報價已改伺服器・免填）</span></label>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 6px;line-height:1.5;">✅ 報價「AI 拆項目」已改走伺服器（金鑰留後端），<b>不再需要這把金鑰</b>，可留空。<br>※ 僅舊版「軍官出擊」還會用到；雷娜軍師對話走的是另一套（commander-chat），也不需要。</div>
+        <input type="text" class="form-input" id="anthropicKey" placeholder="已不需要，可留空">
+
         <p style="font-size:11px;color:#888;margin-top:4px;">填了就能 PWA 直接問 Claude，不用桌機</p>
       </div>
       <button class="btn" onclick="saveSettings()">💾 儲存</button>
