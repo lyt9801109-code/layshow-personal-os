@@ -99,4 +99,60 @@
       .then(function (rows) { if (Array.isArray(rows) && rows[0]) say(rows[0].emoji || '💎', (rows[0].title || '').slice(0, 42)); })
       .catch(function () {});
   }, 180000);
+
+  /* ===== 🔔 系統推播訂閱（之前完全沒有，所以手機收不到推播）=====
+     公鑰本就公開可放前端。訂閱寫進 push_subscriptions，桌機 layshow_webpush 直推。 */
+  var VAPID_PUB = 'BOUxcBB73fO0yZq10B-8r8syZlPmLEY66gXHfNkv5G8HPR16XkIWYtk3-81faZdvJFGUtMSVr6E4rxFIt-dYUks';
+  function b64ToU8(b64) {
+    var pad = '='.repeat((4 - b64.length % 4) % 4);
+    var s = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(s), arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+  async function saveSub(sub) {
+    // push_subscriptions RLS 鎖死 anon，改走 edge function(service_role)安全 upsert
+    try {
+      var seenKey = 'leina_push_ep';
+      var known = localStorage.getItem(seenKey) === sub.endpoint;
+      var r = await fetch(SUPA + '/functions/v1/save-push-sub',
+        { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HEAD),
+          body: JSON.stringify({ endpoint: sub.endpoint, sub: sub, ua: navigator.userAgent }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (j && j.ok) { localStorage.setItem(seenKey, sub.endpoint); return known ? 'exists' : 'new'; }
+      return 'err';
+    } catch (e) { return 'err'; }
+  }
+  async function ensurePush(askIfNeeded) {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      var perm = (typeof Notification !== 'undefined') ? Notification.permission : 'denied';
+      if (perm === 'denied') return;
+      if (perm === 'default') {
+        if (!askIfNeeded) return;           // 不在使用者手勢內就先不打擾
+        perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+      }
+      var reg = await navigator.serviceWorker.ready;
+      var sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(VAPID_PUB) });
+      }
+      var res = await saveSub(sub.toJSON ? sub.toJSON() : sub);
+      if (res === 'new') { try { say('🔔', '手機推播開好了！之後戰報、影片、雷達都會直接跳通知。'); } catch (e) {} }
+    } catch (e) {}
+  }
+  // 已授權 → 靜默確保訂閱有效（修舊的失效訂閱）；未授權 → 等第一次點擊手勢再問一次
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    ensurePush(false);
+  } else {
+    var askedOnce = false;
+    var onGesture = function () {
+      if (askedOnce) return; askedOnce = true;
+      document.removeEventListener('pointerdown', onGesture, true);
+      ensurePush(true);
+    };
+    document.addEventListener('pointerdown', onGesture, true);
+    setTimeout(function () { try { say('🔔', '少爺，點我一下就幫你開手機推播 →'); } catch (e) {} }, 3500);
+  }
 })();
