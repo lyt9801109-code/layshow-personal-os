@@ -71,7 +71,7 @@ function renderOffs(){
 }
 function renderMsgs(){
   var h=hist(cur);
-  if(!h.length){elMsgs.innerHTML='<div class="m tip">'+off(cur).e+' '+off(cur).n+' 在這，少爺有什麼吩咐？</div>';elBub.classList.remove('show');return;}
+  if(!h.length){elMsgs.innerHTML='<div class="m tip">'+off(cur).e+' '+off(cur).n+' 在這，君主有什麼吩咐？</div>';elBub.classList.remove('show');return;}
   elMsgs.innerHTML=h.map(function(m){return '<div class="m '+(m.role==='user'?'u':'a')+'">'+linkify(m.content)+'</div>'}).join('');
   elMsgs.scrollTop=elMsgs.scrollHeight;
   var last=h[h.length-1];
@@ -124,7 +124,7 @@ async function loadFeed(){
     var fresh=rows.filter(function(x){return x.id>seen;});
     var box=document.getElementById('msgs');
     var items=(fresh.length?fresh:rows.slice(0,3));
-    var head=fresh.length?('💎 少爺，我趁你不在時幫你盯著，這些要看一下：'):('💎 最近的提醒：');
+    var head=fresh.length?('💎 君主，我趁你不在時幫你盯著，這些要看一下：'):('💎 最近的提醒：');
     var html='<div class="m a"><b>'+head+'</b></div>'+items.map(function(f){
       var ask=('關於「'+f.title+'」這件，幫我判斷怎麼處理？').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
       return '<div class="m a">'+(f.emoji||'💎')+' <b>'+esc(f.title)+'</b>'+(f.body?'\\n'+linkify(String(f.body).slice(0,300)):'')

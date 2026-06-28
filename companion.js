@@ -81,7 +81,7 @@
       // 主動開口：①首次進頁打招呼 ②有新情報進來就把它講出來
       if (unread > 0 && !greeted) {
         greeted = true;
-        setTimeout(function () { say('💎', '少爺，雷娜有 ' + unread + ' 則新情報，點我看 👀'); }, 1500);
+        setTimeout(function () { say('💎', '君主，雷娜有 ' + unread + ' 則新情報，點我看 👀'); }, 1500);
       } else if (unread > lastUnread && lastUnread >= 0 && unreadRows[0]) {
         say(unreadRows[0].emoji || '💎', (unreadRows[0].title || '有新情報').slice(0, 42));
       }
@@ -153,6 +153,6 @@
       ensurePush(true);
     };
     document.addEventListener('pointerdown', onGesture, true);
-    setTimeout(function () { try { say('🔔', '少爺，點我一下就幫你開手機推播 →'); } catch (e) {} }, 3500);
+    setTimeout(function () { try { say('🔔', '君主，點我一下就幫你開手機推播 →'); } catch (e) {} }, 3500);
   }
 })();
