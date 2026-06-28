@@ -1785,7 +1785,7 @@ async function dispatchOfficer(officerKey) {
 1. 今日營收狀況
 2. 月度進度
 3. 距離目標 NT$ 30,000 還差多少
-4. 給夥伴 1 個明天該做的建議行動`,
+4. 給君主 1 個明天該做的建議行動`,
       preFetch: async () => {
         const today = new Date().toISOString().substring(0,10);
         const monthStart = today.substring(0,7) + '-01';
@@ -1964,7 +1964,7 @@ async function dispatchOfficer(officerKey) {
         completed_at: new Date().toISOString(),
         status: 'success',
         items_processed: 1,
-        notes: 'PWA 夥伴一鍵派遣',
+        notes: 'PWA 君主一鍵派遣',
         output: { answer_preview: answer.substring(0, 200) }
       })
     });
@@ -2015,7 +2015,7 @@ async function dispatchB2BOfficer() {
     const existing = (await existRes.json()).map(x => x.store_name);
 
     // Step 2: Claude 生成 5 家
-    const prompt = `你是 LAYSHOW B2B 戰情官，幫夥伴林逸霆找 5 家台中 NEW B2B 候選（不重複以下：${JSON.stringify(existing.slice(0,80))}）。
+    const prompt = `你是 LAYSHOW B2B 戰情官，幫君主林逸霆找 5 家台中 NEW B2B 候選（不重複以下：${JSON.stringify(existing.slice(0,80))}）。
 產業：民宿/餐廳/補習班/診所/不動產。
 區域優先：北屯、西屯、南屯。
 回傳純 JSON array，每個含：store_name, store_type(minsu/restaurant/school/clinic/rental), district, opening_script(50字內), priority_score(1-10)。不要任何說明文字。`;
@@ -2049,7 +2049,7 @@ async function dispatchB2BOfficer() {
       const data = {
         store_name: c.store_name,
         store_type: c.store_type || 'other',
-        contact_name: '待夥伴聯絡確認',
+        contact_name: '待君主聯絡確認',
         contact_phone: '查 Google Maps',
         city: '台中市',
         district: c.district,
@@ -2089,7 +2089,7 @@ async function dispatchB2BOfficer() {
         completed_at: new Date().toISOString(),
         status: 'success',
         items_processed: written,
-        notes: 'PWA 夥伴一鍵派遣',
+        notes: 'PWA 君主一鍵派遣',
         output: { candidates: candidates.map(c => c.store_name) }
       })
     });

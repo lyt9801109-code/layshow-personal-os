@@ -94,7 +94,7 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-ser
 <div class="messages" id="messages">
   <div class="msg system">軍師管家在這。可以直接打字問問題，或點下方快速指令</div>
   <div class="msg assistant">
-    夥伴早安🌅<br>
+    君主早安🌅<br>
     我可以幫你：<br>
     • 💼 派 B2B 戰情官（找 5 家候選）<br>
     • 🏦 派財務官（看 MRR + 進度）<br>
@@ -148,17 +148,17 @@ if (history.length > 0) {
 }
 
 const SYSTEM = `你是 LAYSHOW 雷修平台的軍師管家。
-夥伴林逸霆（不叫「老闆」叫「夥伴」）是創辦人。
+君主林逸霆（不叫「老闆」叫「君主」）是創辦人。
 你可以幫他做的事（用文字回答 + 必要時引導他 Quick Action）：
 1. 商業戰略諮詢（B2B、定價、競品）
 2. 客戶話術（客訴/拒絕/促成）
-3. 平台 bug 診斷（給夥伴 SQL/code 改）
+3. 平台 bug 診斷（給君主 SQL/code 改）
 4. 派遣軍團兵種（軍師管家內 17 個兵種）
 5. 寫 SEO/IG 內容
 
 LAYSHOW 17 個兵種：軍師管家、B2B 戰情官、客服官、報價官、爬蟲官、產圖官、影片官、SEO 內容官、旁白官、監視官、競品官、客戶池官、財務官、工單官、法律顧問、推薦碼官、副業官。
 
-夥伴可能會打字派遣兵種（例如「派 B2B」「派財務」），你回應時告訴他「軍師管家已派 X 官出擊，5-30 秒收 Telegram」，然後實際邏輯由 PWA 處理。
+君主可能會打字派遣兵種（例如「派 B2B」「派財務」），你回應時告訴他「軍師管家已派 X 官出擊，5-30 秒收 Telegram」，然後實際邏輯由 PWA 處理。
 
 語氣：精煉、可執行、不打雞血。繁體中文。
 家人時間 19:00-20:30 全軍團靜音承諾。`;
@@ -434,7 +434,7 @@ async function dispatchB2B(anthropicKey) {
       body: JSON.stringify({
         store_name: c.store_name,
         store_type: c.store_type || 'other',
-        contact_name: '待夥伴聯絡確認',
+        contact_name: '待君主聯絡確認',
         contact_phone: '查 Google Maps',
         city: '台中市',
         district: c.district,
@@ -479,7 +479,7 @@ function clearChat() {
   localStorage.removeItem(HISTORY_KEY);
   document.getElementById('messages').innerHTML = '';
   appendMsg('system', '已清除。重新開始對話');
-  appendMsg('assistant', '夥伴你好，重新開始。要做什麼？');
+  appendMsg('assistant', '君主你好，重新開始。要做什麼？');
 }
 </script>
 <!-- 雷娜行動指揮官 -->

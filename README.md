@@ -1,6 +1,6 @@
 # 📱 LAYSHOW Personal OS PWA
 
-> 夥伴的手機指揮中心 - 軍師管家 + 16 兵種就在你手心
+> 君主的手機指揮中心 - 軍師管家 + 16 兵種就在你手心
 > Built with HTML/JS/PWA, 安裝即用
 
 ---
